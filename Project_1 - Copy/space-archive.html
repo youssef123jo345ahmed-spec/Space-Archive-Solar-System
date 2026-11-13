@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Archive | Solar System</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Arial,sans-serif;background:#02030b;color:#fff;overflow-x:hidden}
+body.exploring{overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+body.exploring.dragging{cursor:grabbing}
+body.exploring button{cursor:pointer}
+#space{position:fixed;inset:0;width:100%;height:100%;z-index:-2}
+.overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(2,5,20,.88),rgba(2,5,20,.45) 45%,transparent)}
+.lang-btn{position:fixed;top:30px;right:35px;z-index:100;padding:12px 25px;border:1px solid #55baff;border-radius:30px;background:rgba(10,25,55,.7);color:#70caff;font-size:14px;font-weight:bold;cursor:pointer;backdrop-filter:blur(12px);transition:.3s}
+.lang-btn:hover{background:#1689ff;color:#fff;box-shadow:0 0 25px #1689ff;transform:translateY(-3px)}
+.space-controls{position:fixed;left:50%;bottom:62px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px;max-width:calc(100vw - 24px);padding:8px;overflow-x:auto;scrollbar-width:none;background:rgba(10,25,55,.55);border:1px solid rgba(90,180,255,.3);border-radius:40px;backdrop-filter:blur(14px)}
+.space-controls::-webkit-scrollbar{display:none}
+.space-controls button{flex-shrink:0;white-space:nowrap;padding:10px 19px;border:1px solid rgba(90,180,255,.5);border-radius:25px;background:rgba(10,25,55,.7);color:#fff;cursor:pointer;font-size:13px;backdrop-filter:blur(12px);transition:.3s}
+.space-controls button.active{background:#1689ff;border-color:#ffe066;box-shadow:0 0 20px #1689ff}
+.space-controls button:hover{background:#1689ff;box-shadow:0 0 25px #1689ff;transform:translateY(-3px)}
+.hero{min-height:100vh;display:flex;align-items:center;padding:8%;position:relative}
+.hero-inner{max-width:600px}
+.content{max-width:600px;transition:opacity 1.2s ease}
+.content.fade-out{opacity:0;pointer-events:none}
+.tag{display:inline-block;color:#77caff;border:1px solid #347cb9;padding:10px 18px;border-radius:30px;font-size:13px;letter-spacing:2px;margin-bottom:25px;background:#0b1a302b}
+h1{font-size:clamp(36px,5.5vw,73px);line-height:1.3;margin-bottom:20px;color:#fff;text-shadow:0 0 25px #4b8bff66}
+h1 span,.about h2 span{color:#63baff}
+.description{font-size:15px;color:#c1c9da;line-height:1.9;max-width:500px;margin-bottom:30px}
+.footer{position:absolute;bottom:25px;left:35px;color:#9caac5;font-size:12px;letter-spacing:2px;direction:ltr}
+.about{min-height:55vh;padding:100px 8%;background:rgba(3,7,21,.96);text-align:center;transition:opacity 1.2s ease}
+.about.fade-out{opacity:0;pointer-events:none}
+.about h2{font-size:clamp(26px,4.7vw,39px);margin-bottom:25px}
+.about p{max-width:700px;margin:auto;color:#aab8d0;line-height:2;font-size:15px}
+
+.equip-panel{position:fixed;top:78px;left:30px;z-index:20;width:232px;max-height:calc(100vh - 200px);overflow-y:auto;padding:12px 11px;background:rgba(10,25,55,.78);border:1px solid rgba(90,180,255,.45);border-radius:18px;backdrop-filter:blur(14px);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .8s ease,transform .8s ease;cursor:default;user-select:none}
+body.exploring .equip-panel{opacity:1;pointer-events:auto;transform:none}
+.equip-panel h3{font-size:13px;color:#77caff;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(90,180,255,.3)}
+.equip-item{display:block;width:100%;margin-bottom:5px;padding:7px 10px;text-align:start;font-size:11.5px;line-height:1.45;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(90,180,255,.25);border-radius:10px;cursor:pointer;transition:.25s;direction:auto}
+.equip-item:hover{background:rgba(22,137,255,.55);border-color:#55baff}
+.equip-item.active{background:rgba(22,137,255,.75);border-color:#ffe066;box-shadow:0 0 14px rgba(255,224,102,.45)}
+
+.hint{position:fixed;left:50%;bottom:118px;transform:translateX(-50%);z-index:6;padding:8px 18px;font-size:12px;color:#bfe3ff;background:rgba(10,25,55,.7);border:1px solid rgba(90,180,255,.4);border-radius:20px;backdrop-filter:blur(8px);pointer-events:none;opacity:0;transition:opacity .8s ease;white-space:normal;max-width:90vw;text-align:center;direction:auto}
+body.exploring .hint{opacity:1}
+
+#labels{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+.poi-label{position:absolute;left:0;top:0;display:flex;align-items:center;white-space:nowrap;margin:-5px 0 0 -5px;opacity:0;transition:opacity .8s ease;will-change:transform}
+.poi-label.show{opacity:1}
+.poi-dot{width:10px;height:10px;border:1.5px solid #ffe066;border-radius:50%;box-shadow:0 0 10px #ffe066;flex-shrink:0}
+.poi-text{margin:0 0 0 10px;padding:4px 11px;font-size:12px;color:#fff;background:rgba(10,25,55,.78);border:1px solid rgba(255,224,102,.55);border-radius:14px;backdrop-filter:blur(8px);direction:auto}
+
+.media-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:34px;background:radial-gradient(circle at 30% 30%,rgba(22,137,255,.35),rgba(10,25,55,.9));border:1px dashed rgba(90,180,255,.45)}
+.media-ph small{font-size:10px;color:#9fc9ee}
+.media-img img{display:block;width:100%;height:100%;object-fit:cover}
+.story-btn{width:100%;padding:7px 10px;font-size:12px;color:#fff;background:#1689ff;border:0;border-radius:10px;cursor:pointer;transition:.25s}
+.story-btn:hover{box-shadow:0 0 14px #1689ff}
+
+.story{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(2,5,20,.82);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .5s ease}
+.story.open{opacity:1;pointer-events:auto}
+.story-box{position:relative;display:flex;width:min(920px,100%);max-height:88vh;overflow:hidden;background:rgba(10,25,55,.94);border:1px solid rgba(90,180,255,.5);border-radius:22px;box-shadow:0 0 60px rgba(22,137,255,.25);transform:scale(.96);transition:transform .5s ease}
+.story.open .story-box{transform:none}
+.story-media{flex:0 0 40%;min-height:280px;background:#050a1a}
+.story-media>div{width:100%;height:100%;border-radius:0;border:0;font-size:70px}
+.story-text{flex:1;padding:34px 30px;overflow-y:auto;cursor:auto;user-select:text}
+.story-text h2{font-size:26px;margin-bottom:8px;color:#fff;direction:auto}
+.story-meta{margin-bottom:18px;padding-bottom:14px;font-size:13px;line-height:1.8;color:#77caff;border-bottom:1px solid rgba(90,180,255,.3);direction:auto}
+.story-kicker{font-size:13px;color:#77caff;margin-bottom:8px;direction:auto}
+.story-text .story-title{font-size:28px;line-height:1.5;margin-bottom:14px;color:#fff}
+.story-sep{height:2px;width:70px;margin-bottom:18px;background:linear-gradient(90deg,#1689ff,transparent);border-radius:2px}
+@keyframes storyIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.story.open .story-title,.story.open .story-kicker{animation:storyIn .7s ease both}
+.story.open .story-sep{animation:storyIn .7s ease .35s both}
+.story.open .story-body{animation:storyIn .9s ease .7s both}
+.story-body{font-size:15px;line-height:2;color:#d3dbea;direction:auto}
+.story-body p{margin-bottom:14px}
+.story-empty{color:#8fa6c7;font-style:italic}
+.story-close{position:absolute;top:14px;inset-inline-end:14px;z-index:2;width:38px;height:38px;border:1px solid #55baff;border-radius:50%;background:rgba(10,25,55,.85);color:#70caff;font-size:16px;cursor:pointer;transition:.25s}
+.story-close:hover{background:#1689ff;color:#fff}
+.info-box{width:min(480px,100%);flex-direction:column}
+.info-box .story-media{flex:0 0 200px;min-height:0}
+.info-box .story-text{padding:22px 24px 24px}
+.info-box .story-text h2{font-size:22px}
+.info-box .story-meta{border-bottom:0;padding-bottom:0;font-size:14px;color:#c1c9da}
+.info-box .story-btn{padding:10px 14px;font-size:14px}
+
+@media(max-width:700px){
+.hero{align-items:flex-end;padding:10% 7% 32%}
+.overlay{background:linear-gradient(0deg,rgba(2,5,20,.97),rgba(2,5,20,.3))}
+.footer{left:15px;bottom:12px;font-size:9px}
+.lang-btn{top:18px;right:18px;padding:10px 20px}
+.space-controls{bottom:38px;gap:6px;padding:6px}
+.space-controls button{padding:10px 17px;font-size:12px}
+.about{padding:75px 7%}
+.hint{bottom:100px;font-size:11px}
+.equip-panel{top:64px;left:12px;right:12px;width:auto;max-height:24vh;padding:9px}
+.equip-panel h3{font-size:12px;margin-bottom:6px;padding-bottom:6px}
+.equip-item{padding:6px 9px;font-size:11px;margin-bottom:4px}
+.story{padding:12px}
+.story-box{flex-direction:column}
+.story-media{flex:0 0 180px;min-height:0}
+.story-text{padding:20px 18px}
+.story-text h2,.story-text .story-title{font-size:21px}
+}
+@media(prefers-reduced-motion:reduce){
+html{scroll-behavior:auto}
+.lang-btn,.space-controls button,.content,.about,.hint,.poi-label,.story,.story-box{transition:none}
+.story.open .story-title,.story.open .story-kicker,.story.open .story-sep,.story.open .story-body{animation:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="space"></canvas>
+<div class="overlay"></div>
+
+<button id="langBtn" class="lang-btn">ENGLISH</button>
+
+<div id="labels"></div>
+<div id="hint" class="hint"></div>
+
+<aside id="equipPanel" class="equip-panel">
+    <h3 id="equipTitle"></h3>
+    <div id="equipList"></div>
+</aside>
+
+<div id="info" class="story info">
+    <div class="story-box info-box">
+        <button id="infoClose" type="button" class="story-close">✕</button>
+        <div id="infoMedia" class="story-media"></div>
+        <div class="story-text">
+            <h2 id="infoName"></h2>
+            <p id="infoText" class="story-meta"></p>
+            <button id="infoStoryBtn" type="button" class="story-btn"></button>
+        </div>
+    </div>
+</div>
+
+<div id="story" class="story">
+    <div class="story-box">
+        <button id="storyClose" type="button" class="story-close">✕</button>
+        <div id="storyMedia" class="story-media"></div>
+        <div class="story-text">
+            <p id="storyName" class="story-kicker"></p>
+            <h2 id="storyTitle" class="story-title"></h2>
+            <div class="story-sep"></div>
+            <div id="storyBody" class="story-body"></div>
+        </div>
+    </div>
+</div>
+
+<main class="hero">
+    <div class="hero-inner">
+        <div class="content" id="heroContent">
+            <div class="tag" id="tag">✦ رحلة عبر الفضاء</div>
+            <h1 id="mainTitle">اكتشف <span>الكون</span><br>وما وراءه</h1>
+            <p class="description" id="mainDescription">أرشيف الفضاء هو منصة تفاعلية تستكشف تاريخ المهمات الفضائية والمركبات والمركبات الجوالة على القمر والمريخ وما وراءهما.</p>
+        </div>
+
+        <div class="space-controls">
+            <button data-btn="moon" onclick="focusSpaceObject('moon')">🌙 القمر</button>
+            <button data-btn="mars" onclick="focusSpaceObject('mars')">🔴 المريخ</button>
+            <button data-btn="ceres" onclick="focusSpaceObject('ceres')">☄️ سيريس</button>
+            <button data-btn="eros" onclick="focusSpaceObject('eros')">🪨 إيروس</button>
+            <button data-btn="pioneer" onclick="focusSpaceObject('pioneer')">🚀 بايونير</button>
+            <button data-btn="kepler" onclick="focusSpaceObject('kepler')">🔭 كبلر</button>
+        </div>
+    </div>
+    <div class="footer" id="footer">SPACE ARCHIVE — EXPLORE THE UNIVERSE</div>
+</main>
+
+<!-- TRANSLATION -->
+<script>
+const translations = {
+    ar: {
+        button: "ENGLISH", direction: "rtl",
+        tag: "✦ رحلة عبر الفضاء",
+        title: 'اكتشف <span>الكون</span><br>وما وراءه',
+        description: "انطلق في رحلة استثنائية عبر أعماق الكون. اكتشف الشمس والكواكب الثمانية، واستكشف أسرار المجرات والعوالم البعيدة التي تنتظر من يكتشفها.",
+        footer: "SPACE ARCHIVE — EXPLORE THE UNIVERSE",
+        moon: "🌙 القمر", mars: "🔴 المريخ", ceres: "☄️ سيريس", eros: "🪨 إيروس", pioneer: "🚀 بايونير", kepler: "🔭 كبلر",
+        hint: "اسحب للتدوير · العجلة للتقريب · اضغط على معدة لتحديدها · دبل كليك للمعلومات والقصة"
+    },
+    en: {
+        button: "العربية", direction: "ltr",
+        tag: "✦ A JOURNEY THROUGH SPACE",
+        title: 'Discover the <span>Universe</span><br>and Beyond',
+        description: "Embark on an extraordinary journey through the depths of space. Discover the Sun and its eight planets, explore distant worlds, and uncover the mysteries of our incredible universe.",
+        footer: "SPACE ARCHIVE — EXPLORE THE UNIVERSE",
+        moon: "🌙 Moon", mars: "🔴 Mars", ceres: "☄️ Ceres", eros: "🪨 Eros", pioneer: "🚀 Pioneer", kepler: "🔭 Kepler",
+        hint: "Drag to rotate · Scroll to zoom · Click an item to select · Double-click for details & story"
+    }
+};
+
+function showSpaceError(msg) {
+    if (window.__spaceReady || document.getElementById("spaceError")) return;
+    const box = document.createElement("div");
+    box.id = "spaceError";
+    box.style.cssText = "position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:999;max-width:90%;padding:12px 18px;border-radius:12px;background:#7a1620;color:#fff;font:13px/1.6 Arial,sans-serif;direction:ltr;text-align:left";
+    box.textContent = msg;
+    document.body.appendChild(box);
+}
+window.addEventListener("error", function (e) {
+    showSpaceError("Error: " + (e.message || "script failed") + (e.lineno ? " (line " + e.lineno + ")" : ""));
+});
+window.addEventListener("load", function () {
+    setTimeout(function () {
+        showSpaceError("3D scene did not start. Three.js may be blocked or not loading (check internet / open the file in Chrome).");
+    }, 4000);
+});
+
+let currentLang = "ar";
+document.getElementById("hint").textContent = translations.ar.hint;
+
+document.getElementById("langBtn").addEventListener("click", function () {
+    currentLang = currentLang === "ar" ? "en" : "ar";
+    const lang = translations[currentLang];
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir = lang.direction;
+    document.getElementById("langBtn").textContent = lang.button;
+    document.getElementById("tag").textContent = lang.tag;
+    document.getElementById("mainTitle").innerHTML = lang.title;
+    document.getElementById("mainDescription").textContent = lang.description;
+    document.getElementById("footer").textContent = lang.footer;
+    document.querySelectorAll("[data-btn]").forEach((b) => { b.textContent = lang[b.dataset.btn]; });
+    document.getElementById("hint").textContent = lang.hint;
+});
+</script>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from "three";
+
+/* 1. SCENE */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x02030b);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+camera.position.set(0, 24, 53);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({canvas: document.getElementById("space"), antialias: true, powerPreference: "high-performance"});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
+
+/* 2. LIGHTING */
+scene.add(new THREE.AmbientLight(0x8a9bc4, 0.9));
+scene.add(new THREE.PointLight(0xffd9a0, 1800, 150, 1.5));
+
+/* 3. TEXTURES */
+function createTexture(type, colors) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512; canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+    colors.forEach((c, i) => gradient.addColorStop(i / (colors.length - 1), c));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 512, 256);
+
+    if (type === "earth") {
+        ctx.fillStyle = "#27864c";
+        for (let i = 0; i < 35; i++) {
+            ctx.beginPath();
+            ctx.ellipse(Math.random() * 512, Math.random() * 256, Math.random() * 25 + 5, Math.random() * 15 + 4, Math.random() * 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = "#c8e9fa";
+        ctx.fillRect(0, 0, 512, 12);
+        ctx.fillRect(0, 244, 512, 12);
+    }
+    if (type === "jupiter") {
+        for (let i = 0; i < 256; i += 15) {
+            ctx.fillStyle = i % 30 === 0 ? "#9c6347" : "#e6c69c";
+            ctx.fillRect(0, i, 512, 8 + Math.random() * 8);
+        }
+        ctx.fillStyle = "#b45b40";
+        ctx.beginPath();
+        ctx.ellipse(340, 155, 32, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    if (type === "saturn") {
+        for (let i = 0; i < 256; i += 12) {
+            ctx.fillStyle = i % 24 === 0 ? "#a17a4f" : "#e9d1a0";
+            ctx.fillRect(0, i, 512, 7);
+        }
+    }
+    if (type === "moon") {
+        for (let i = 0; i < 100; i++) {
+            const x = Math.random() * 512, y = Math.random() * 256, r = Math.random() * 12 + 3;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(30,30,30,0.25)"; ctx.fill();
+            ctx.beginPath(); ctx.arc(x - r * 0.2, y - r * 0.2, r * 0.65, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 2; ctx.stroke();
+        }
+    }
+    for (let i = 0; i < 700; i++) {
+        ctx.fillStyle = "rgba(255,255,255,0.07)";
+        ctx.fillRect(Math.random() * 512, Math.random() * 256, Math.random() * 3 + 1, Math.random() * 3 + 1);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+}
+
+/* 4. SUN */
+const sun = new THREE.Mesh(
+    new THREE.SphereGeometry(2.5, 64, 64),
+    new THREE.MeshStandardMaterial({map: createTexture("sun", ["#fff5ad", "#ffcc22", "#ff8100", "#b52d00"]), emissive: 0xff8000, emissiveIntensity: 2.5, roughness: 1})
+);
+scene.add(sun);
+
+const glowCanvas = document.createElement("canvas");
+glowCanvas.width = 256; glowCanvas.height = 256;
+const glowCtx = glowCanvas.getContext("2d");
+const glow = glowCtx.createRadialGradient(128, 128, 10, 128, 128, 128);
+glow.addColorStop(0, "rgba(255,180,30,0.8)");
+glow.addColorStop(0.35, "rgba(255,110,0,0.25)");
+glow.addColorStop(1, "rgba(255,80,0,0)");
+glowCtx.fillStyle = glow;
+glowCtx.fillRect(0, 0, 256, 256);
+const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(glowCanvas), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false}));
+sunGlow.scale.set(15, 15, 1);
+sun.add(sunGlow);
+
+/* 5. PLANET DATA */
+const planets = [
+    {name: "Mercury", size: 0.38, distance: 5, speed: 0.85, colors: ["#b5a99a", "#77716d", "#45413f"]},
+    {name: "Venus", size: 0.65, distance: 7, speed: 0.65, colors: ["#ffe0a0", "#d59b53", "#8b5128"]},
+    {name: "Earth", size: 0.72, distance: 9.5, speed: 0.46, colors: ["#5ab9ef", "#1464ac", "#082d70"], type: "earth"},
+    {name: "Mars", size: 0.53, distance: 12, speed: 0.36, colors: ["#ffb18a", "#d04c30", "#70251b"]},
+    {name: "Jupiter", size: 1.55, distance: 16, speed: 0.24, colors: ["#f0d3a4", "#c38c5f", "#815038"], type: "jupiter"},
+    {name: "Saturn", size: 1.3, distance: 20, speed: 0.18, colors: ["#f7dfaa", "#c3a06c", "#8e7046"], type: "saturn", rings: true},
+    {name: "Uranus", size: 0.95, distance: 24, speed: 0.13, colors: ["#c3ffff", "#65c5d0", "#267b91"]},
+    {name: "Neptune", size: 0.9, distance: 28, speed: 0.10, colors: ["#80b9ff", "#2454d1", "#101d77"]}
+];
+
+/* 6. ORBITS AND PLANETS */
+const movingPlanets = [];
+let marsPlanet = null;
+let earthPlanet = null;
+
+planets.forEach((data) => {
+    const points = [];
+    for (let i = 0; i <= 180; i++) {
+        const a = (i / 180) * Math.PI * 2;
+        points.push(new THREE.Vector3(Math.cos(a) * data.distance, 0, Math.sin(a) * data.distance));
+    }
+    const og = new THREE.BufferGeometry();
+    og.setFromPoints(points);
+    scene.add(new THREE.Line(og, new THREE.LineBasicMaterial({color: 0x6688bb, transparent: true, opacity: 0.25})));
+
+    const pivot = new THREE.Group();
+    scene.add(pivot);
+
+    const planet = new THREE.Mesh(
+        new THREE.SphereGeometry(data.size, 48, 48),
+        new THREE.MeshStandardMaterial({map: createTexture(data.type || data.name, data.colors), roughness: 0.85, metalness: 0.03})
+    );
+    planet.position.x = data.distance;
+    pivot.add(planet);
+
+    if (data.name === "Earth") earthPlanet = planet;
+    if (data.name === "Mars") marsPlanet = planet;
+
+    if (data.rings) {
+        const ring = new THREE.Mesh(
+            new THREE.RingGeometry(data.size * 1.35, data.size * 2.2, 100),
+            new THREE.MeshStandardMaterial({color: 0xd8bc8a, side: THREE.DoubleSide, transparent: true, opacity: 0.85, roughness: 0.8})
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.rotation.z = 0.3;
+        planet.add(ring);
+    }
+    movingPlanets.push({name: data.name, pivot, planet, speed: data.speed});
+});
+
+/* 7. MOON */
+const moonPivot = new THREE.Group();
+if (earthPlanet) earthPlanet.add(moonPivot);
+const moon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.23, 48, 48),
+    new THREE.MeshStandardMaterial({map: createTexture("moon", ["#eeeeee", "#999999", "#555555"]), roughness: 1})
+);
+moon.position.x = 1.4;
+moonPivot.add(moon);
+
+/* 7.2 Ceres, Eros, Pioneer, Kepler */
+function addBody(o) {
+    const pivot = new THREE.Group();
+    pivot.rotation.y = o.angle;
+    scene.add(pivot);
+
+    const material = o.colors
+        ? new THREE.MeshStandardMaterial({map: createTexture("moon", o.colors), roughness: 0.95})
+        : new THREE.MeshBasicMaterial({visible: false});
+
+    const geometry = new THREE.SphereGeometry(o.radius, 48, 48);
+    if (o.shape) geometry.scale(o.shape[0], o.shape[1], o.shape[2]);
+
+    if (o.orbit) {
+        const pts = [];
+        for (let i = 0; i <= 180; i++) {
+            const a = (i / 180) * Math.PI * 2;
+            pts.push(new THREE.Vector3(Math.cos(a) * o.distance, 0, Math.sin(a) * o.distance));
+        }
+        scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color: o.orbit, transparent: true, opacity: 0.22})));
+    }
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = o.distance;
+    pivot.add(mesh);
+    movingPlanets.push({name: o.name, pivot, planet: mesh, speed: o.speed, spin: o.spin});
+    return mesh;
+}
+
+const ceresPlanet = addBody({name: "Ceres", radius: 0.3, distance: 13.9, speed: 0.3, spin: 0.5, angle: 1.0, colors: ["#c9c2ba", "#8d867e", "#59544d"]});
+const erosPlanet = addBody({name: "Eros", radius: 1, shape: [0.38, 0.15, 0.15], distance: 11, speed: 0.4, spin: 0.6, angle: 3.6, orbit: 0xffb870, colors: ["#b39a80", "#7d6a55", "#4d4033"]});
+const pioneerHub = addBody({name: "Pioneer", radius: 0.8, distance: 34, speed: 0, spin: 0, angle: 0});
+const keplerHub = addBody({name: "Kepler", radius: 0.01, distance: 10.8, speed: 0.42, spin: 0.3, angle: -0.35});
+
+const bodies = {
+    moon: {mesh: moon},
+    mars: {mesh: marsPlanet},
+    ceres: {mesh: ceresPlanet},
+    eros: {mesh: erosPlanet},
+    pioneer: {mesh: pioneerHub},
+    kepler: {mesh: keplerHub}
+};
+function bodyKeyOf(object) {
+    return Object.keys(bodies).find((k) => bodies[k].mesh === object);
+}
+
+/* 7.5 EQUIPMENT MODELS */
+const matWhite = new THREE.MeshStandardMaterial({color: 0xeeeeee, emissive: 0x2a2a2a, roughness: 0.6});
+const matGold = new THREE.MeshStandardMaterial({color: 0xd9a441, emissive: 0x3a2a05, metalness: 0.6, roughness: 0.4});
+const matDark = new THREE.MeshStandardMaterial({color: 0x2b2b2b, emissive: 0x111111, roughness: 0.9});
+const matPanel = new THREE.MeshStandardMaterial({color: 0x2a4a8a, emissive: 0x0a1530, roughness: 0.4});
+
+function addPart(group, geometry, material, x, y, z) {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    group.add(mesh);
+    return mesh;
+}
+
+function makeRover() {
+    const g = new THREE.Group();
+    addPart(g, new THREE.BoxGeometry(1.4, 0.45, 0.9), matWhite, 0, 0.7, 0);
+    addPart(g, new THREE.BoxGeometry(1.0, 0.06, 0.9), matPanel, -0.1, 1.0, 0);
+    const wheelGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.2, 16);
+    wheelGeo.rotateX(Math.PI / 2);
+    [-0.5, 0, 0.5].forEach((x) => { [-0.55, 0.55].forEach((z) => addPart(g, wheelGeo, matDark, x, 0.28, z)); });
+    addPart(g, new THREE.CylinderGeometry(0.04, 0.04, 0.8, 8), matDark, 0.5, 1.3, 0);
+    addPart(g, new THREE.BoxGeometry(0.22, 0.14, 0.3), matWhite, 0.5, 1.75, 0);
+    return g;
+}
+function makeLander() {
+    const g = new THREE.Group();
+    addPart(g, new THREE.CylinderGeometry(0.65, 0.8, 0.55, 8), matGold, 0, 1.0, 0);
+    addPart(g, new THREE.CylinderGeometry(0.4, 0.65, 0.25, 8), matWhite, 0, 1.4, 0);
+    const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.0, 8);
+    const padGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.05, 12);
+    for (let i = 0; i < 4; i++) {
+        const a = i * Math.PI / 2 + Math.PI / 4;
+        addPart(g, legGeo, matDark, Math.cos(a) * 0.8, 0.5, Math.sin(a) * 0.8);
+        addPart(g, padGeo, matDark, Math.cos(a) * 0.8, 0.03, Math.sin(a) * 0.8);
+    }
+    return g;
+}
+function makeHelicopter() {
+    const g = new THREE.Group();
+    addPart(g, new THREE.BoxGeometry(0.5, 0.4, 0.5), matWhite, 0, 0.9, 0);
+    addPart(g, new THREE.BoxGeometry(0.7, 0.04, 0.7), matPanel, 0, 1.55, 0);
+    addPart(g, new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), matDark, 0, 1.3, 0);
+    addPart(g, new THREE.BoxGeometry(2.2, 0.03, 0.16), matDark, 0, 1.78, 0);
+    const blade2 = addPart(g, new THREE.BoxGeometry(2.2, 0.03, 0.16), matDark, 0, 1.82, 0);
+    blade2.rotation.y = Math.PI / 2;
+    const legGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.75, 6);
+    [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]].forEach(([x, z]) => addPart(g, legGeo, matDark, x, 0.38, z));
+    return g;
+}
+function makeScience() {
+    const g = new THREE.Group();
+    addPart(g, new THREE.BoxGeometry(0.8, 0.45, 0.8), matGold, 0, 0.3, 0);
+    addPart(g, new THREE.CylinderGeometry(0.04, 0.04, 1.2, 8), matDark, 0, 1.05, 0);
+    const dish = addPart(g, new THREE.CylinderGeometry(0.5, 0.1, 0.12, 16), matWhite, 0, 1.7, 0);
+    dish.rotation.x = 0.5;
+    addPart(g, new THREE.CylinderGeometry(0.2, 0.2, 0.25, 12), matDark, 1.1, 0.13, 0.35);
+    addPart(g, new THREE.BoxGeometry(0.35, 0.25, 0.35), matWhite, -1.1, 0.13, -0.3);
+    return g;
+}
+function makeProbe() {
+    const g = new THREE.Group();
+    addPart(g, new THREE.CylinderGeometry(0.4, 0.4, 0.3, 6), matGold, 0, 0.5, 0);
+    addPart(g, new THREE.CylinderGeometry(1.0, 0.1, 0.18, 24), matWhite, 0, 1.0, 0);
+    addPart(g, new THREE.CylinderGeometry(0.03, 0.03, 0.7, 6), matDark, 0, 1.45, 0);
+    [-1, 1].forEach((side) => {
+        const boom = addPart(g, new THREE.CylinderGeometry(0.025, 0.025, 1.4, 6), matDark, side * 0.9, 0.5, 0);
+        boom.rotation.z = Math.PI / 2;
+        addPart(g, new THREE.CylinderGeometry(0.12, 0.12, 0.45, 10), matDark, side * 1.6, 0.5, 0);
+    });
+    return g;
+}
+function makeTelescope() {
+    const g = new THREE.Group();
+    addPart(g, new THREE.CylinderGeometry(0.5, 0.5, 1.4, 16), matWhite, 0, 1.0, 0);
+    addPart(g, new THREE.CylinderGeometry(0.52, 0.52, 0.3, 16), matGold, 0, 0.35, 0);
+    addPart(g, new THREE.CylinderGeometry(0.4, 0.4, 0.04, 16), matDark, 0, 1.72, 0);
+    [-1, 1].forEach((side) => addPart(g, new THREE.BoxGeometry(1.4, 0.04, 0.7), matPanel, side * 1.05, 0.9, 0));
+    return g;
+}
+function makeSpacecraft() {
+    const g = new THREE.Group();
+    addPart(g, new THREE.BoxGeometry(0.7, 0.7, 0.7), matGold, 0, 0.7, 0);
+    [-1, 1].forEach((side) => addPart(g, new THREE.BoxGeometry(1.7, 0.04, 0.7), matPanel, side * 1.35, 0.7, 0));
+    addPart(g, new THREE.CylinderGeometry(0.28, 0.1, 0.35, 12), matDark, 0, 0.2, 0);
+    addPart(g, new THREE.CylinderGeometry(0.03, 0.03, 0.6, 6), matDark, 0, 1.3, 0);
+    return g;
+}
+
+const kindIcons = {rover: "🚙", lander: "🛰️", helicopter: "🚁", science: "📡", spacecraft: "🛰️", probe: "🚀", telescope: "🔭"};
+const kindModels = {rover: makeRover, lander: makeLander, helicopter: makeHelicopter, science: makeScience, spacecraft: makeSpacecraft, probe: makeProbe, telescope: makeTelescope};
+
+/* =====================================================================
+   📦 كل المعدات هنا
+   kind: rover | lander | helicopter | science | spacecraft | probe | telescope
+   lat / lon: المكان على الجسم
+   image: رابط أو مسار الصورة ("" = شكل مؤقت)
+   info: المعلومات اللي بتظهر في نافذة المعدة
+   story: القصة (title + ar + en). اكتب بين الـ backticks. ممنوع ${ جوه النص
+   ===================================================================== */
+const landmarkData = {
+    moon: {
+        mesh: moon, radius: 0.23, modelScale: 0.05,
+        items: [
+            {
+                kind: "lander", lat: 53, lon: 0,
+                ar: "أبولو 11 — الوحدة القمرية «إيجل»", en: "Apollo 11 Lunar Module \"Eagle\"",
+                image: "apollo-11.png",
+                info: {
+                    ar: "أول مركبة مأهولة تهبط على القمر، هبطت يوم 20 يوليو 1969 في بحر الهدوء، وعلى متنها القائد نيل أرمسترونغ وطيار الوحدة القمرية باز ألدرين، أول رجلين يمشيان على القمر. قضيا نحو ساعتين ونصف على السطح، وقطعا حوالي 250 مترًا، وجمعا 21.55 كجم من الصخور والتربة، ونشرا حزمة التجارب EASEP. مرحلة الهبوط تُركت على القمر كمنصة إطلاق، أما مرحلة الصعود فمصيرها غير معروف، ويُفترض أنها ارتطمت بالقمر بعد أشهر.",
+                    en: "The first crewed vehicle to land on the Moon, touching down on July 20, 1969 in the Sea of Tranquility, carrying Commander Neil Armstrong and Lunar Module pilot Buzz Aldrin, the first two men to walk on the Moon. They collected 21.55 kg of rock and soil, walked about 250 meters, and deployed the EASEP science package. The descent stage was left on the Moon as a launch platform; the fate of the ascent stage is not known, but it is assumed to have crashed into the Moon within a few months."
+                },
+                story: {title: {ar: " الرحلة التي غيّرت التاريخ", en: ""}, ar: `في عام 1961 وقف الرئيس كينيدي أمام الكونجرس وقال: «سنصل إلى القمر قبل أن ينتهي هذا العقد.» ابتسم الناس، فأمريكا لم تكن قد أرسلت إلى الفضاء سوى رجلٍ واحد في رحلة قصيرة، والسوفيت يتقدمونها بخطوات.
+
+غير أن هذا الحلم كان له ثمنٌ باهظ. فقد اشتعلت النيران داخل كبسولة أبولو 1 وهي على الأرض، ومات ثلاثةٌ من روّادها في ثوانٍ معدودة. كاد المشروع كله يتوقف، لكن ناسا بدأت من جديد، وعمل آلاف الناس ليلاً ونهاراً: مهندسون وفنيون ومبرمجون، وحتى خياطاتٌ كنّ يحِكن بدلات الفضاء بأيديهن.
+
+ثم وقع الاختيار على ثلاثة رجال. نيل أرمسترونج، القائد الهادئ الذي نجا من حوادث كثيرة دون أن تتغير ملامحه. وباز ألدرين، العالِم الذي يعرف حسابات الفضاء كما يعرف كفَّ يده. ومايكل كولينز، الذي كُتب عليه أن يبقى وحيداً في مدار القمر، يدور وينتظر.
+
+وأطلّ الصباح الموعود في يوليو 1969. احتشد الناس على شواطئ فلوريدا، وأمامهم الصاروخ ساتورن 5، أضخم آلةٍ صنعها الإنسان حتى ذلك الحين. بدأ العدّ التنازلي... ثم صفر! اهتزّت الأرض، وارتفع الصاروخ نحو السماء حاملاً ثلاثة رجال وأحلام عالَمٍ بأكمله.
+
+ثلاثة أيامٍ مضت والمركبة تشق الصمت. ومن النافذة راحوا يشاهدون الأرض وهي تصغر شيئاً فشيئاً، حتى صارت كرةً زرقاء صغيرة يستطيع أحدهم أن يخفيها بإبهامه.
+
+ثم جاء يوم الهبوط. انفصلت «إيجل» عن «كولومبيا»، وقال كولينز لزميليه: «استمتعا بالرحلة.» وهنا بدأت المتاعب.
+
+فجأةً دوّى إنذارٌ غريب في الحاسوب، ولم يفهمه أحد داخل المركبة. لكن في هيوستن، راجع مهندسٌ شاب الأرقام بسرعة وقال: «تابعوا، لا خطر.» وبعد لحظات اكتشف أرمسترونج أن الحاسوب يقودهم نحو صخورٍ ضخمة بحجم السيارات، فأمسك بزمام القيادة بيده، وراح يحلّق باحثاً عن بقعةٍ مستوية، والوقود يوشك على النفاد ثانيةً بعد ثانية.
+
+وفي قاعة التحكم، حبس الجميع أنفاسهم... حتى جاءهم الصوت الهادئ من القمر:
+
+«هيوستن، هنا قاعدة الهدوء. لقد هبط النسر.»
+
+فانفجرت القاعة بالتصفيق والبكاء.
+
+وبعد ساعات، نزل أرمسترونج السلّم درجةً درجة، وملايين البشر حول العالم متسمّرون أمام الشاشات. وضع قدمه على التراب الناعم وقال:
+
+«هذه خطوة صغيرة لإنسان، وقفزة عملاقة للبشرية.»
+
+ثم لحق به ألدرين، ونظر حوله ووصف المشهد بأنه «كآبةٌ رائعة»: صحراء رمادية صامتة تحت سماء سوداء، والأرض معلّقة فوقهما كجوهرةٍ زرقاء. جمعا بعض الصخور، ونصبا أجهزةً علمية، وتركا لوحةً كُتب عليها: «جئنا بسلامٍ نيابةً عن البشرية جمعاء.»
+
+وقبل أن يخلدا إلى النوم، وقعت المفاجأة. فقد انكسر مفتاحٌ صغير، وهو المفتاح الذي يشغّل محرك العودة! فكّر ألدرين قليلاً، ثم أخرج قلماً من جيبه وضغط به على موضع الكسر... فعمل المحرك!
+
+وعاد الثلاثة سالمين، وهبطوا بالمظلات في المحيط، ثم قضوا أسابيع في الحجر الصحي، والرئيس نفسه يرحّب بهم من وراء الزجاج.
+
+لكن أثمن ما عادوا به لم يكن الصخور... بل صورة الأرض من بعيد: كوكبٌ صغير هشّ في ظلامٍ لا نهاية له.
+
+وهذا هو سرّ الحكاية: لم تكن قصة صواريخ وحسابات فحسب، بل قصة ناسٍ آمنوا بحلمٍ واحد وعملوا له معاً، حتى صار المستحيل حقيقة.`, en: ``}
+            },
+            {
+                kind: "lander", lat: -10, lon: -120,
+                ar: "أبولو 12 — الوحدة القمرية «إنتريبيد»", en: "Apollo 12 Lunar Module \"Intrepid\"",
+                image: "apollo-12.png",
+                info: {
+                    ar: "ثاني مركبة مأهولة تهبط على القمر (19 نوفمبر 1969) في محيط العواصف، وعلى متنها بيت كونراد وآلان بين. هبطت على بعد حوالي 180 مترًا من المسبار سيرفيور 3، وأعاد الرائدان منه نحو 10 كجم من القطع إلى الأرض. بقيت مرحلة الهبوط على السطح مع حزمة ALSEP، وارتطمت مرحلة الصعود بالقمر عمدًا مسببة أول زلزال قمري اصطناعي مسجّل.",
+                    en: "The second crewed vehicle to land on the Moon (November 19, 1969), in Oceanus Procellarum, carrying Pete Conrad and Alan Bean. It landed within about 180 meters of the Surveyor 3 probe, and the astronauts brought back about 10 kg of its parts to Earth. Its descent stage stayed on the surface along with an ALSEP package, and the ascent stage was crashed into the Moon on purpose, creating the first recorded artificial moonquake."
+                },
+                story: {title: {ar: " الرحلة التي ضربها البرق", en: ""}, ar: `بعد أربعة أشهر فقط من هبوط أبولو 11، كانت ناسا تعرف أن الوصول مرةً واحدة قد يكون حظاً، وأن العلم الحقيقي يبدأ حين يصير الإنجاز قابلاً للتكرار. فجاءت أبولو 12 لتثبت أن ما حدث لم يكن صدفة.
+
+واختارت ناسا ثلاثة رجال. بيت كونراد، القائد القصير القامة، المرح الذي لا يكفّ عن المزاح. وآلان بين، الذي كان يعشق الرسم بقدر ما يعشق الطيران. وريتشارد جوردون، الذي كُتب عليه أن يبقى وحيداً في مدار القمر.
+
+وفي 14 نوفمبر 1969 كانت فلوريدا تحت المطر والغيوم، لكن الرحلة انطلقت. وبعد ستٍّ وثلاثين ثانية فقط، ضرب البرقُ الصاروخَ! أضاءت لوحة التحكم كشجرة عيد الميلاد، وتعطّلت الأنظمة واحداً تلو الآخر، ثم ضربه البرق مرةً ثانية.
+
+لكن في هيوستن كان مهندسٌ شاب اسمه جون آرون تذكّر خللاً غريباً صادفه في تجربةٍ سابقة، فأرسل أمراً غامضاً:
+
+«حوّلوا مفتاح SCE إلى الوضع الاحتياطي.»
+
+لم يفهم القائد شيئاً، لكن آلان بين كان يعرف مكان ذلك المفتاح، فحرّكه... وعادت الأنظمة إلى الحياة!
+
+وفي 19 نوفمبر هبطت المركبة القمرية «إنتريبيد» بدقةٍ مذهلة، على بعد نحو 180 متراً فقط من مسبارٍ قديم أرسلته ناسا قبل سنتين. ونزل كونراد السلّم وقال ضاحكاً:
+
+«قد تكون خطوة صغيرة بالنسبة لنيل، لكنها كانت طويلةً بالنسبة إليّ!»
+
+قضى الرجلان على القمر نحو سبع ساعات ونصف، ونصبا أجهزةً علمية وجمعا الصخور، ثم مشيا إلى المسبار القديم وحملا بعض أجزائه إلى الأرض ليدرس العلماء أثر بيئة القمر فيها. غير أن آلان بين وجّه كاميرا التلفزيون نحو الشمس بالخطأ، فاحترق مجسّها، وحُرم الناس من مشاهدة الصور.
+
+وبعد رحيلهما، أُلقيت مرحلة الإقلاع على سطح القمر عمداً، فاهتزّ القمر قرابة ساعةٍ كاملة كأنه جرسٌ ضخم، وكان ذلك دليلاً ثميناً على اختلاف باطنه عن باطن الأرض.
+
+وفي 24 نوفمبر هبط الثلاثة سالمين في المحيط الهادئ.
+
+وهذا هو سرّ الحكاية: أبولو 11 أثبتت أن الإنسان يستطيع الوصول، وأبولو 12 أثبتت أنه يستطيع العودة والعمل والاكتشاف.`, en: ``}
+            },
+            {
+                kind: "lander", lat: 25, lon: -80,
+                ar: "أبولو 15 — الوحدة القمرية «فالكون»", en: "Apollo 15 Lunar Module \"Falcon\"",
+                image: "apollo-15.png",
+                info: {
+                    ar: "رابع مركبة مأهولة تهبط على القمر (30 يوليو 1971) عند سفح جبال الأبنين قرب وادي هادلي، وعلى متنها ديفيد سكوت وجيمس إيروين. حملت أول مركبة قمرية جوّالة وحزمة ALSEP، وجمع الرائدان 77.31 كجم من العينات خلال ثلاث جولات. بقيت مرحلة الهبوط على السطح، وارتطمت مرحلة الصعود بالقمر بعد انفصالها.",
+                    en: "The fourth crewed vehicle to land on the Moon (July 30, 1971), at the foot of the Apennine Mountains near Hadley Rille, carrying David Scott and James Irwin. It delivered the first Lunar Roving Vehicle and an ALSEP science package, and the astronauts collected 77.31 kg of samples over three moonwalks. Its descent stage stayed on the surface, while the ascent stage was crashed into the Moon after being jettisoned."
+                },
+                story: {title: {ar: "الرحلة التي قادت فيها العربةُ الإنسانَ إلى قلب الجبال", en: ""}, ar: `في 26 يوليو 1971 انطلقت أبولو 15، وكانت أولى رحلات ناسا «الطويلة». فبعد أن أثبتت الرحلات السابقة أن الهبوط ممكن، أرادت ناسا هذه المرة أن يبقى الرواد أياماً على القمر، وأن يبتعدوا عن المركبة، وأن يعودوا بعلمٍ أكثر.
+
+واختارت ناسا ثلاثة رجال. ديفيد سكوت، القائد الصلب الواثق. وجيمس إيروين، طيار المركبة القمرية، المتديّن الهادئ الذي وصف رحلته بأنها أقرب ما يكون إلى الله. وألفريد وردن، الذي بقي وحيداً في مدار القمر، لكنه لم يقضِ وقته في الانتظار، بل في تصوير سطح القمر ورسم خرائطه بأجهزةٍ علمية متقدمة.
+
+وكان لهذه الرحلة بطلٌ رابع لم يكن إنساناً: العربة القمرية، أول مركبةٍ تجوب سطح القمر ويقودها بشر. كانت خفيفةً تعمل بالبطاريات، وطويت داخل المركبة القمرية كما تُطوى المظلة، حتى إذا وصلوا فُتحت في دقائق.
+
+وفي 30 يوليو هبطت المركبة «فالكون» (الصقر) قرب سلسلة جبال أبنين وصدعٍ عميق اسمه هادلي ريل، في موقعٍ لم يكن ليُجرَّب من قبل لشدة وعورته. وكان الهبوط أقرب إلى المخاطرة، فقد مالت المركبة قليلاً بعد أن استقرت في فوهةٍ صغيرة.
+
+وفعل سكوت شيئاً لم يفعله أحدٌ قبله: فتح الفتحة العلوية للمركبة، ووقف يتأمل المشهد من الأعلى، ثم قضى ساعةً كاملة يصوّر ويصف الجبال المحيطة بأعينه. ثم بدأت الاستكشافات الحقيقية.
+
+نزل الرجلان وركبا العربة، وانطلقا عبر السهل الرمادي بين الجبال الشاهقة. قطعا في ثلاثة أيامٍ نحو 28 كيلومتراً، وهي مسافةٌ لم يكن ممكناً قطعها سيراً على الأقدام. وكانا يتوقفان عند الصخور، يلتقطان العيّنات، ويصفان ما يريانه لهيوستن.
+
+وفي إحدى الوقفات، عثر سكوت وإيروين على صخرةٍ بيضاء لامعة تقف منفردةً فوق قاعدةٍ صغيرة من الصخور الأخرى. وحين درسها العلماء، تبيّن أنها من قشرة القمر الأولى، تشكّلت قبل نحو أربعة مليارات سنة. فسمّوها «صخرة التكوين»، لأنها كانت أقدم صخرةٍ جلبها الإنسان من القمر حتى ذلك الحين.
+
+وقبل الرحيل، أجرى سكوت تجربةً بسيطة أمام الكاميرا: أمسك بمطرقةٍ في يدٍ وريشة صقرٍ في الأخرى، وقال إن غاليليو أخبر العالم قبل قرون بأن الأجسام كلها تسقط بالسرعة نفسها في غياب الهواء. ثم أفلتهما معاً، فسقطتا جنباً إلى جنب وارتطمتا بالتراب في اللحظة ذاتها. وصاح سكوت:
+
+«غاليليو كان محقاً!»
+
+وفي ختام الرحلة، ترك الرجلان على القمر تمثالاً صغيراً لرائدٍ يرتدي بدلة الفضاء، وبجانبه لوحةٌ بأسماء رواد الفضاء الذين ماتوا في سبيل الاستكشاف.
+
+وفي 7 أغسطس 1971 هبط الثلاثة بالمظلات في المحيط الهادئ.
+
+وهذا هو سرّ الحكاية: أبولو 15 لم تكن رحلةً لمجرد الوصول، بل رحلةً لفهم القمر ذاته. فبفضل العربة والجبال والصخور القديمة، صار القمر عالماً له تاريخٌ نعرفه، لا مجرد صحراءٍ نمرّ بها.`, en: ``}
+            },
+            {
+                kind: "lander", lat: -53, lon: -170,
+                ar: "سيرفيور 3", en: "Surveyor 3",
+                image: "as12-48-7134_1280.jpg",
+                info: {
+                    ar: "ثاني مسبار من سلسلة سيرفيور يهبط هبوطًا ناعمًا على القمر (20 أبريل 1967) في محيط العواصف، بعد أن ارتدّ عن السطح مرتين قبل أن يستقر. حفر أربعة خنادق بذراعه الميكانيكية وأرسل 6,326 صورة، وأثبتت تجاربه أن التربة القمرية تتحمل وزن وحدة أبولو. وبعد أكثر من ثلاث سنوات زاره رائدا أبولو 12 وأعادا أجزاء منه إلى الأرض.",
+                    en: "The second Surveyor to make a soft landing on the Moon (April 20, 1967), in Oceanus Procellarum, after bouncing twice before settling. It dug four trenches with its surface sampler and sent back 6,326 TV pictures, and its tests showed the lunar soil could support an Apollo lunar module. More than three years later, Apollo 12 astronauts visited it and brought parts back to Earth."
+                },
+                story: {title: {ar: "الروبوت الذي انتظر رفاقه على القمر", en: ""}, ar: `قبل أن تفكر ناسا في إرسال رجلٍ إلى القمر، كان عليها أن تعرف سؤالاً بسيطاً ومخيفاً: هل تتحمل تربة القمر وزن مركبة هبوط؟ كان بعض العلماء يخشون أن يكون سطحه غباراً سميكاً يبتلع كل ما يهبط عليه. فأرسلت ناسا سلسلةً من المسابير الآلية اسمها «سيرفيور»، مهمتها أن تهبط برفقٍ وتنقل الصور والمعلومات.
+
+وفي 17 أبريل 1967 انطلق سيرفيور 3، وهبط بعد ثلاثة أيام في منطقة «محيط العواصف». لكن الهبوط لم يكن هادئاً. فقد استمرت محركاته في العمل لحظاتٍ أطول مما ينبغي، فارتدّ المسبار عن سطح القمر مرتين، كأنه كرة تقفز، ثم استقرّ أخيراً داخل فوهةٍ صغيرة على منحدرٍ لطيف.
+
+وبدأ العمل. فتح المسبار عينه الوحيدة، وهي كاميرا تلفزيونية، وراح يرسل إلى الأرض آلاف الصور لسطح القمر، حتى تجاوزت ستة آلاف صورة. وكانت له ذراعٌ ميكانيكية بمغرفةٍ صغيرة، فحفر بها خنادق في التربة، وكان أول من يحفر على سطح عالمٍ آخر، فتبيّن للعلماء أن التربة متماسكةٌ تتحمل الوزن. وفي تلك الأيام اطمأنت ناسا إلى أن الهبوط البشري ممكن.
+
+ثم التقط المسبار منظراً نادراً: كسوف الشمس بالأرض، كما يبدو من القمر. وهو منظر لم يشاهده إنسانٌ قبله.
+
+لكن ليل القمر طويل، يستمر نحو أسبوعين، وبرده قاسٍ يتجاوز مئة درجةٍ تحت الصفر. ومع غروب الشمس نامت أجهزة سيرفيور 3، وحاول المهندسون إيقاظه بعد الفجر القمري، فلم يستجب. وهكذا بقي المسبار صامتاً في فوهته، وحيداً تحت السماء السوداء.
+
+ومرّت سنتان تقريباً. ثم جاء نوفمبر 1969، وهبطت «إنتريبيد» بمركبة أبولو 12، وكان الهدف أن تهبط قريباً منه بالتحديد. فنظر الرائدان بيت كونراد وآلان بين من نافذة المركبة، فرأيا في الفوهة المجاورة شيئاً صغيراً يلمع على بعدٍ نحو 180 متراً. كان سيرفيور 3 ينتظرهما.
+
+نزلا ومشيا نحوه. وجداه مغطّىً بطبقةٍ رقيقة من غبارٍ بنيّ، فقد غيّرت ألسنة الغبار التي أثارتها المركبة لونه. فكّا كاميرته وجزءاً من أنابيبه وذراع المغرفة، ووضعاها في حقيبةٍ، وحملاها إلى الأرض ليرى العلماء كيف فعلت سنتان من الإشعاع والبرد الشديد بمعادن الآلات.
+
+ويحتفظ متحف الطيران والفضاء الوطني في واشنطن بكاميرا سيرفيور 3 حتى اليوم. وقد أثار العلماء ضجةً قديمة حين ظنّوا أنهم وجدوا بداخلها بكتيريا حيّة نجت من قسوة القمر، لكن الأرجح لاحقاً أن التلوث حدث على الأرض بعد عودة القطعة. أما المسبار نفسه فما زال هناك في فوهته، يرقد في مكانه إلى اليوم.
+
+وهذا هو سرّ الحكاية: قبل أن يضع الإنسان قدمه على القمر، مهّد له الطريق مسبارٌ صغير، حفر التراب وصوّر الجبال وتحمّل الوحدة، ثم استقبل ضيوفه بعد سنتين من الانتظار.`, en: ``}
+            }
+        ]
+    },
+    mars: {
+        mesh: marsPlanet, radius: 0.53, modelScale: 0.07,
+        items: [
+            {
+                kind: "rover", lat: 61, lon: 0,
+                ar: "أوبورتيونيتي", en: "Opportunity",
+                image: "NASA_Mars_Rover.jpg",
+                info: {
+                    ar: "مركبة جوّالة توأم عملت لسنوات طويلة، وهي الآن غير نشطة وتقف كنصب تذكاري لاستكشاف المريخ.",
+                    en: "Twin rover that operated for years. Now an inactive monument to Mars exploration."
+                },
+                story: {title: {ar: "الجوّالة التي وعدوها بتسعين يوماً فعاشت خمسة عشر عاماً", en: ""}, ar: `في عام 2003 أرسلت ناسا توأمين إلى المريخ: سبيريت (الروح) وأوبورتيونيتي (الفرصة). وقد اختارت الاسمين طفلةٌ في التاسعة من عمرها اسمها صوفي كوليس، كتبت في مقالها أنها كانت تعيش في ملجأ للأيتام، وأن أمريكا منحتها «روحاً» و«فرصة». كانت كل واحدة بحجم عربة غولف، لها ست عجلات وذراعٌ ميكانيكية وكاميرات تقوم مقام العيون، وتسير بالطاقة الشمسية. وقدّر المهندسون عمرها بتسعين يوماً مريخياً فقط.
+
+وفي 25 يناير 2004 هبطت أوبورتيونيتي على سهلٍ يُسمّى «ميريديياني بلانوم». ارتدّت فوق السطح داخل أكياسٍ هوائية عملاقة، ثم استقرّت داخل فوهةٍ صغيرة. وقال العلماء إنها أصابت الهدف «من أول ضربة»، فقد وقعت قرب صخورٍ مكشوفة تحكي تاريخ المكان.
+
+ولم تخيّب الظن. عثرت على كراتٍ صغيرة من معدنٍ يتكوّن في الماء، سمّاها العلماء «التوت الأزرق»، وكانت دليلاً قاطعاً على أن المريخ كان يوماً رطباً، وأن الماء السائل غمر هذا السهل. وهكذا بدأت الإجابة عن سؤالٍ قديم: هل كان المريخ صالحاً للحياة؟
+
+ومرّت التسعون يوماً، ثم مرّت سنة، ثم سنوات. وصارت الجوّالة تنزل إلى الفوهات وتطلّ على حوافها وتعبر الكثبان الرملية. وكانت تغوص أحياناً في الرمال حتى تتشبث عجلاتها، فيقضي المهندسون أسابيع يدرسون حركتها على الأرض قبل أن يرسلوا إليها أمر الخروج.
+
+ثم جاء عونٌ غير متوقع: كانت الرياح المريخية تمرّ فوق ألواحها الشمسية فتنفض عنها الغبار، فتعود إليها الطاقة كلما كادت تنفد. فكان العلماء يقولون مبتسمين إن المريخ نفسه يعتني بها.
+
+وفي كل سنةٍ كان الفريق يرسل إليها تحيةً في ذكرى هبوطها، وقد ظلّ كثيرٌ منهم يتحدث عنها كأنها كائنٌ حيّ. وقطعت في رحلتها أكثر من 45 كيلومتراً، أي أكثر من مسافة سباق الماراثون، وهو رقمٌ قياسي لأي مركبةٍ جابت عالماً آخر.
+
+لكن في يونيو 2018 هبّت عاصفةٌ غبارية ضخمة غطّت المريخ كله، فحجبت الشمس. وحين غابت الشمس، توقفت الألواح عن العمل، وانقطع الاتصال. وانتظر المهندسون شهوراً، وأرسلوا إليها آلاف الأوامر، دون ردّ.
+
+وفي 13 فبراير 2019 أعلنت ناسا انتهاء المهمة. وقد تناقل الناس يومها عبارةً مؤثرة تُنسب إلى الجوّالة، تقول إن بطاريتها منخفضة وإن الظلام يحلّ. وهي في الحقيقة صياغةٌ شاعرية لآخر بياناتها لا نصٌّ أرسلته بنفسها، لكنها لخّصت شعور الناس تجاهها.
+
+وهذا هو سرّ الحكاية: وُعدت بتسعين يوماً، فعاشت نحو 15 سنة، وحوّلت السؤال عن الماء على المريخ إلى حقيقةٍ مدعومة بالدليل، وفتحت الطريق لمن جاء بعدها`, en: ``}
+            },
+            {
+                kind: "rover", lat: 39, lon: 138,
+                ar: "سبيريت", en: "Spirit",
+                image: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Spirit_Rover_Model.jpg",
+                info: {
+                    ar: "مركبة جوّالة توأم عملت لسنوات طويلة، وهي الآن غير نشطة وتقف كنصب تذكاري لاستكشاف المريخ.",
+                    en: "Twin rover that operated for years. Now an inactive monument to Mars exploration."
+                },
+                story: {title: {ar: "التوأم الذي علق في الرمال", en: ""}, ar: `كانت سبيريت (الروح) التوأم الأول. هبطت في 4 يناير 2004، قبل أوبورتيونيتي بثلاثة أسابيع، داخل فوهةٍ ضخمة اسمها «جوسيف»، يبلغ عرضها نحو 160 كيلومتراً. وكان العلماء يأملون أن تكون بحيرةً قديمة، وأن يجدوا في قاعها رواسب الماء. لكن الفوهة خيّبت الظن في البداية، فلم تجد سبيريت سوى حجارةٍ بركانية.
+
+وبعد أسابيع من الهبوط وقعت أول مشكلة. فجأةً انقطع الاتصال بالجوّالة، ثم بدأت تُرسل بياناتٍ مشوّشة بلا معنى، وكادت المهمة تنتهي في أيامها الأولى. ومرّت أيامٌ عصيبة حتى اكتشف المهندسون أن ذاكرتها الداخلية امتلأت بملفاتٍ كثيرة، فأعادوا ترتيبها عن بُعد، وعادت سبيريت إلى العمل. وهكذا أُنقذت جوّالةٌ تبعد ملايين الكيلومترات بإصلاحٍ برمجي.
+
+ثم سارت نحو تلالٍ تُسمّى «كولومبيا هيلز»، وتسلّقتها، وهي أول مركبةٍ تتسلق جبلاً في عالمٍ آخر. وهناك وجدت صخوراً تحمل أدلةً على أن الماء الساخن والبخار كانا يوماً هنا، فتغيّرت الصورة: لم تكن بحيرة، بل منطقةً بركانيةً رطبة، وربما مناسبةً للحياة.
+
+وفي عام 2007 عثرت عجلتها المعطوبة على كنزٍ بالصدفة. كانت إحدى عجلاتها الست قد تعطّلت وصارت تُسحب خلفها، فحفرت في التراب خندقاً من دون قصد، فكشفت تربةً بيضاء لامعة غنية بالسيليكا. وقال العلماء إنها دليلٌ على وجود ينابيع حارة قديمة، وهي بيئةٌ تنشأ فيها الحياة على الأرض.
+
+لكن الرمال المريخية كانت تتربص بها. ففي أبريل 2009 غاصت عجلاتها في تربةٍ ناعمة كالمسحوق، وتشبّثت. وحاول المهندسون إنقاذها شهوراً، وجرّبوا نسخةً طبق الأصل من الجوّالة على رملٍ في مختبرهم، لكن الجهد لم ينفع، وبقيت عالقةً في مكانها.
+
+ومع ذلك لم تتوقف. حوّلها العلماء إلى محطةٍ ثابتة تدرس المكان وتراقب اهتزازات المريخ. ثم جاء الشتاء المريخي، وكانت ألواحها مائلةً بعيداً عن الشمس، فلم تنل من الطاقة ما يكفي. وفي مارس 2010 انقطع الاتصال بها للمرة الأخيرة، ثم أعلنت ناسا انتهاء المهمة رسمياً في 2011.
+
+وقد عملت سبيريت أكثر من ست سنوات، بينما كان المقدّر لها تسعون يوماً فقط. وقطعت نحو 7.7 كيلومتر.
+
+وهذا هو سرّ الحكاية: قد تعلق الآلة في الرمال، لكنها لا تُهزم ما دام لها من يؤمن بها. فسبيريت حوّلت عجزها إلى علم، وعلّمتنا أن بعض الإنجازات الكبرى تأتي حين تتعطل الخطة.`, en: ``}
+            },
+            {
+                kind: "lander", lat: 22, lon: -85,
+                ar: "فايكنغ 1", en: "Viking 1 Lander",
+                image: "Viking_spacecraft.jpg",
+                info: {
+                    ar: "من أول مركبتي هبوط أمريكيتين تعملان بنجاح على المريخ (1976)، وتبقى في نفس المكان الذي هبطت فيه.",
+                    en: "One of the first U.S. landers to successfully operate on Mars (1976), remaining exactly where it touched down."
+                },
+                story: {title: {ar: " أول من جلس على المريخ ليجيب عن سؤال الحياة", en: ""}, ar: `في 20 أغسطس 1975 انطلقت فايكينغ 1 نحو المريخ، ومعها توأمها فايكينغ 2. وكانت كل مهمةٍ مؤلفة من جزأين: مدارية تدور حول الكوكب وتصوّره من الأعلى، وهابطة تنزل إلى سطحه. وكان هدف ناسا طموحاً: أن تهبط مركبةٌ سالمةً على المريخ، وأن تبحث فيه عن الحياة.
+
+وبعد عشرة أشهر من الرحلة، وصلت المركبة إلى مدار المريخ في يونيو 1976. وكان الموعد المنتظر للهبوط هو الرابع من يوليو، في ذكرى مرور مئتي عامٍ على استقلال أمريكا. لكن حين نظر المهندسون إلى الصور القادمة من المدار، ساءهم ما رأوا: موقع الهبوط المختار مليءٌ بالصخور والحفر، والهبوط عليه مقامرةٌ خاسرة. فأجّلوا الموعد، وراحوا يدرسون الصور بحثاً عن بقعةٍ أكثر أماناً، واستقر رأيهم على سهلٍ يُسمّى «كريسي بلانيتيا»، أي «سهل الذهب».
+
+وجاء 20 يوليو 1976، وهو اليوم نفسه الذي هبط فيه أرمسترونج على القمر قبل سبع سنوات. انفصلت المركبة الهابطة عن المدارية، وبدأت تغوص في غلاف المريخ الجوي. كانت الإشارات تحتاج نحو 19 دقيقة لتصل إلى الأرض، فلم يكن في وسع المهندسين أن يتدخلوا بشيء. كان على المركبة أن تنفذ كل شيءٍ بنفسها: تفتح مظلتها، وتشعل محركاتها الصاروخية، وتخفف سرعتها، ثم تلمس الأرض. وانتظر الجميع في قاعة التحكم بصمتٍ ثقيل.
+
+ثم وصلت الإشارة: لقد هبطت! وفي دقائق قليلة بدأت الكاميرا ترسل صورتها الأولى، فظهر على الشاشة خطٌّ بعد خطٍّ شيءٌ يشبه قدماً معدنية، وحولها صخورٌ وتراب. كانت أول صورةٍ واضحةٌ التُقطت من سطح المريخ، وصاح الحاضرون فرحاً.
+
+وفي الأيام التالية بدأت الألوان تصل. كان السطح أحمر مائلاً إلى البرتقالي، أما السماء فبدت في الصور الأولى زرقاء، لكن المهندسين صحّحوا الألوان لاحقاً، فتبيّن أن سماء المريخ تميل إلى لونٍ وردي مصفرّ بسبب الغبار العالق.
+
+ثم جاء الاختبار الأهم. مدّت المركبة ذراعها الميكانيكية، وغرفت قليلاً من التراب، وأدخلته إلى مختبرها الصغير الذي يضم ثلاث تجارب للبحث عن الحياة. كانت الفكرة أن تُغذّى عيّنة التراب بمواد مغذّية، فإن كان فيها كائناتٌ دقيقة، ظهر أثر تنفّسها أو تمثيلها الغذائي.
+
+وكانت النتائج مثيرة. ففي إحدى التجارب انطلق غازٌ من التراب بمجرد إضافة الغذاء، تماماً كما يحدث حين تتغذى الميكروبات! وقفز العلماء من مقاعدهم. لكن تجربةً أخرى كانت مهمتها البحث عن أي مادةٍ عضوية، وهي لبنة الحياة، فلم تجد أثراً لها. وبعد نقاشٍ طويل، رجّح معظم العلماء أن التفاعل كان كيميائياً صرفاً لا حياةً. وفي عام 2008 اكتشفت مركبةٌ أخرى اسمها فينيكس مادةً كيميائية في تراب المريخ تفسّر تلك النتائج الغامضة. ومع ذلك لا يزال بعض العلماء يرى أن القصة لم تُغلق نهائياً.
+
+وفي هذه الأثناء كانت المركبة المدارية تؤدي عملها فوق الرؤوس. صوّرت الكوكب بدقةٍ لم يعرفها البشر من قبل، ومن بين صورها صورةٌ لتلٍّ في منطقة «سيدونيا»، بدت فيه الظلال كأنها وجهٌ بشري ضخم، فأثارت ضجةً كبرى وأخذ كثيرون يتحدثون عن حضارةٍ قديمة. لكن حين صُوّر التل مجدداً بكاميراتٍ أدق بعد سنوات، تبيّن أنه تلٌّ طبيعي عادي، وأن الوجه كان مجرد خدعة ضوءٍ وظل.
+
+أما المركبة الهابطة فقد كانت عنيدةً بحق. فقد حُدّد لها عملٌ يستمر نحو تسعين يوماً، لكنها ظلّت تعمل وترسل تقارير الطقس وصور الغروب وأخبار الرياح عاماً بعد عام. وسُمّيت لاحقاً «محطة توماس ماتش التذكارية» تكريماً لقائد فريق التصوير الذي مات قبل هبوطها بشهور.
+
+وفي 11 نوفمبر 1982 انقطع الاتصال بها. وقد تبيّن لاحقاً أن خطأً في أمرٍ برمجي أُرسل إليها أتلف المعلومات التي تضبط اتجاه هوائيها، فلم تعد تعرف أين الأرض. وبذلك انتهت رحلتها بعد أكثر من ست سنوات على سطح المريخ.
+
+وهذا هو سرّ الحكاية: لم تجد فايكينغ 1 حياةً على المريخ، لكنها فعلت شيئاً لا يقلّ أهمية: صارت الجدّة التي مهّدت الطريق لكل المركبات التي جاءت بعدها، من سبيريت وأوبورتيونيتي إلى اليوم. وعلّمتنا أن الإجابة عن أعظم الأسئلة قد تحتاج أجيالاً من الباحثين، وأن كل مركبةٍ تضيف جزءاً من الجواب.`, en: ``}
+            },
+            {
+                kind: "rover", lat: 7, lon: 53,
+                ar: "المركبة الجوّالة سوجورنر", en: "Sojourner Rover",
+                image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Sojourner_on_Mars_PIA01122.jpg",
+                info: {
+                    ar: "أول مركبة جوّالة على المريخ (1997)، وصلت مع مركبة الهبوط باثفايندر، وهي الآن متوقفة بشكل دائم.",
+                    en: "The first rover on Mars (1997), delivered by the Pathfinder lander. Now permanently parked."
+                },
+                story: {title: {ar: "الجوّالة الصغيرة التي فتحت الطريق إلى المريخ", en: ""}, ar: `في 4 ديسمبر 1996 انطلقت المركبة باثفايندر (الرائد) نحو المريخ، وفي بطنها جوّالةٌ صغيرة لا يتجاوز وزنها عشرة كيلوجرامات ونصف. كانت ناسا قد غابت عن سطح المريخ ما يقارب عشرين عاماً منذ فايكينغ، وأرادت أن تعود بطريقةٍ أرخص وأسرع. وقد سُمّيت الجوّالة سوجورنر نسبةً إلى سوجورنر تروث، المرأة التي ناضلت ضد العبودية وجابت البلاد تنادي بالحرية. واختارت الاسم فتاةٌ في الثانية عشرة من عمرها اسمها فاليري أمبرواز، فازت بمسابقةٍ شارك فيها آلاف الأطفال.
+
+وفي 4 يوليو 1997 بدأ الهبوط، وكان هبوطاً غريباً. لم تكن هناك صواريخ تحمل المركبة بهدوء، بل غُلّفت بأكياسٍ هوائية ضخمة، وارتطمت بسطح المريخ وارتدّت عشرات الأمتار مراراً، مثل كرةٍ هائلة، قبل أن تستقر. وحبس المهندسون أنفاسهم. ثم تنفّسوا الصعداء: لقد نجح الأمر!
+
+وانفتحت المركبة كالزهرة، وتدحرجت منها سوجورنر على منحدرٍ صغير، ثم لامست التراب الأحمر بعجلاتها الست. كانت أول مرة في التاريخ يسير فيها شيءٌ صنعه البشر على سطح المريخ.
+
+لكن الصعوبة كانت في قيادتها. فالإشارة تستغرق دقائق لتصل من الأرض إلى المريخ، فلا يمكن توجيهها بعصا تحكّمٍ كسيارة لعبة. كان المهندسون يرسلون إليها الأوامر مرةً في اليوم، وتنفذها هي بنفسها. وزوّدوها بأشعةٍ ضوئية تمسح الأرض أمامها، فإذا رأت صخرةً كبيرة أو حفرة، توقفت وغيّرت اتجاهها. وكانت تتحرك ببطء شديد، بسرعة لا تتجاوز سنتيمترات في الثانية، فتقطع المسافة القصيرة في وقتٍ طويل.
+
+واقتربت من الصخور وفحصتها بجهازٍ يكشف تركيبها الكيميائي، وكان العلماء قد أطلقوا عليها أسماءً طريفة: «بارناكل بيل» و*«يوغي»* و*«سكوبي دو»*. وكشفت التحاليل أن بعض هذه الصخور يشبه صخور الأرض البركانية، وأن آثار فيضاناتٍ هائلة قديمة ظاهرةٌ في الأرض من حولها، فقد كان الماء يوماً يجري في هذا المكان بقوة.
+
+وكانت مهمتها المقدّرة سبعة أيام مريخية فقط. لكنها عاشت 83 يوماً، أي أكثر من عشرة أضعاف ما قُدّر لها. ومع ذلك لم تبتعد كثيراً، فلم تتجاوز مسافتها عن المركبة الأم نحو اثني عشر متراً، وكان مجموع ما قطعته نحو مئة متر.
+
+لكن أثرها فاق المسافة بكثير. فقد تابع الناس مغامرتها على الإنترنت، وكان الإنترنت لا يزال جديداً، وسجّل موقع المهمة مئات الملايين من الزيارات في أسابيعه الأولى. وللمرة الأولى بدا المريخ قريباً من كل بيت، وراح الأطفال في كل مكان يرسمون الجوّالة الصغيرة.
+
+وفي 27 سبتمبر 1997 انقطع الاتصال بالمركبة الأم، وهي التي كانت تنقل رسائل سوجورنر إلى الأرض. وبانقطاعها صمتت الجوّالة أيضاً. وما زالت هناك حتى اليوم، مركونةً قرب المركبة التي سُمّيت لاحقاً «محطة كارل ساغان التذكارية»، تنتظر في صمتٍ تحت السماء الوردية.
+
+وهذا هو سرّ الحكاية: لم تكن سوجورنر كبيرةً ولا سريعة، لكنها أثبتت أن جوّالةً صغيرة تستطيع أن تسير على كوكبٍ آخر. ومن خطواتها الصغيرة خرجت سبيريت وأوبورتيونيتي وكيوريوسيتي وبيرسيفيرانس.`, en: ``}
+            },
+            {
+                kind: "lander", lat: -7, lon: -170,
+                ar: "فايكنغ 2", en: "Viking 2 Lander",
+                image: "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/07/PIA01522.jpg",
+                info: {
+                    ar: "من أول مركبتي هبوط أمريكيتين تعملان بنجاح على المريخ (1976)، وتبقى في نفس المكان الذي هبطت فيه.",
+                    en: "One of the first U.S. landers to successfully operate on Mars (1976), remaining exactly where it touched down."
+                },
+                story: {title: {ar: "التوأم الذي ذهب أبعد نحو الشمال", en: ""}, ar: `انطلقت فايكينغ 2 في 9 سبتمبر 1975، بعد توأمها فايكينغ 1 بنحو ثلاثة أسابيع. وكانت مؤلفةً مثلها من جزأين: مدارية تدور حول المريخ، وهابطة تنزل إلى سطحه. وبعد رحلةٍ دامت نحو أحد عشر شهراً دخلت مدار الكوكب في أغسطس 1976.
+
+وكان اختيار موقع الهبوط هذه المرة أصعب. فقد أراد العلماء مكاناً أقرب إلى القطب الشمالي، حيث يُرجَّح أن يكون الماء المتجمد أقرب إلى السطح، ومن ثمّ تكون فرصة وجود الحياة أكبر. لكن أول موقعٍ اختاروه بدا خطراً حين صوّره المدار، فتأخر الهبوط أسابيع، حتى استقر الرأي على سهلٍ شاسع اسمه «أوتوبيا بلانيتيا».
+
+وفي 3 سبتمبر 1976 هبطت المركبة. لكن الهبوط لم يمرّ بسلام تماماً. فقد حطّت إحدى أرجلها الثلاث فوق صخرةٍ، فمالت المركبة قليلاً نحو ثماني درجات. لكنها بقيت سليمة وبدأت العمل مباشرةً.
+
+وكانت الصورة الأولى مختلفة عن صور أختها. فالأرض هنا مفروشةٌ بصخورٍ كثيرة مليئة بالثقوب الصغيرة، كأنها قطعٌ من الإسفنج، وقد رجّح العلماء أنها صخورٌ بركانية خرجت منها الغازات وهي تتجمد.
+
+وفي الأسابيع التالية، جرّبت المركبة تجارب البحث عن الحياة نفسها التي أجرتها أختها، فجاءت النتائج مشابهة: تفاعلاتٌ غامضة في التراب لم يجزم العلماء بأنها حياة، وغياب للمواد العضوية. وبذلك تعزّز الرأي القائل إن تلك التفاعلات كيميائية لا حيوية.
+
+لكن فايكينغ 2 قدّمت شيئاً لم تقدّمه أختها: الشتاء المريخي. فحين حلّ الشتاء، رأت الكاميرا شيئاً مدهشاً: طبقةً رقيقة بيضاء تغطي التراب والصخور، كأنها صقيع الفجر. وتبيّن لاحقاً أنه غبارٌ مختلط بثلج الماء المتجمد، وهي أول مرةٍ يُرى فيها الصقيع على سطح المريخ. وأثبتت بذلك أن للمريخ طقساً ودورة مياه، وإن كانت ضئيلةً جداً.
+
+أما المركبة المدارية فقد أدّت دوراً كبيراً. صوّرت آلاف الصور، وكشفت أودية جافة وقنوات متعرجة بدت كأن مياهاً قوية جرت فيها يوماً، وهو ما أيّد فكرة أن المريخ كان أكثر رطوبةً في الماضي. وعملت المدارية نحو سنتين، قبل أن ينفد وقودها وتتوقف في عام 1978.
+
+وفي 11 أبريل 1980 انقطع الاتصال بالمركبة الهابطة، بعد أكثر من ثلاث سنوات ونصف على سطح المريخ، ويُرجَّح أن بطارياتها تدهورت. وقد سُمّي موقعها لاحقاً «محطة جيرالد سوفين التذكارية»، تكريماً لعالمٍ ساهم في المهمة.
+
+وهذا هو سرّ الحكاية: كانت فايكينغ 1 هي من فتحت الباب، أما فايكينغ 2 فقد ذهبت أبعد نحو الشمال، فرأت الصقيع وشاهدت الشتاء وأكملت الصورة. وبالمهمتين معاً بدأ البشر يفهمون المريخ لا كنقطةٍ في السماء، بل كعالَمٍ حقيقيٍّ له تضاريس وفصول.`, en: ``}
+            },
+            {
+                kind: "lander", lat: -22, lon: -32,
+                ar: "فينيكس", en: "Phoenix Lander",
+                image: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Phoenix_on_the_Red_Planet.jpg",
+                info: {
+                    ar: "حفرت بحثًا عن جليد الماء، ثم نفدت طاقتها في النهاية.",
+                    en: "Phoenix dug for water ice. It eventually lost power."
+                },
+                story: {title: {ar: "طائر العنقاء الذي نهض من رماد المريخ", en: ""}, ar: `كانت ناسا قد تلقّت ضربتين موجعتين عند نهاية التسعينيات: فُقدت المركبتان «مارس كلايمت أوربيتر» و*«مارس بولار لاندر»* في عام 1999. ولم يكن في الأمر سوى خطأ في وحدات القياس في الأولى، وعطلٍ أثناء الهبوط في الثانية، لكن الثمن كان فادحاً. وبعد سنوات، قرر فريقٌ بقيادة العالم بيتر سميث من جامعة أريزونا أن يحاول من جديد، مستخدماً أجهزةً بُنيت للمركبة الملغاة. فسمّوا مركبتهم «فينيكس»، أي العنقاء، الطائر الأسطوري الذي ينهض من رماده.
+
+وفي 4 أغسطس 2007 انطلقت المركبة نحو المريخ. وكان هدفها مختلفاً عن أهداف سابقاتها: لا تتجول ولا تبحث عن الحياة مباشرةً، بل تهبط قرب القطب الشمالي وتحفر، لتتأكد مما شكّ فيه العلماء طويلاً: هل يختبئ الماء المتجمد تحت التراب؟
+
+وجاء 25 مايو 2008، وهو يوم الهبوط. واستعدّ المهندسون لما يسمّونه «سبع دقائق من الرعب»، وهي المدة التي تقضيها المركبة في الهبوط وحدها، دون أن يستطيع أحد على الأرض أن يتدخل، لأن الإشارة تتأخر نحو خمس عشرة دقيقة. فتحت المركبة مظلتها، ثم انفصلت عنها، وأشعلت صواريخها لتخفف سرعتها وتلامس الأرض برفق، بينما وقف المهندسون صامتين ينتظرون.
+
+ثم وصلت الإشارة: لقد نجحت! وانفجرت القاعة بالتصفيق والعناق. وفي لحظةٍ لم يتكرر مثلها من قبل، التقطت مركبةٌ أخرى تدور حول المريخ صورةً لفينيكس وهي تتدلى من مظلتها في السماء. كانت أول مرةٍ تُصوَّر فيها مركبةٌ أثناء هبوطها على كوكبٍ آخر.
+
+وبدأ العمل. لم تكن فينيكس جوّالة، فقد كانت ثابتةً في مكانها كشجرةٍ صغيرة، لكنّ لها ذراعاً ميكانيكية طولها نحو مترين ونصف. مدّت الذراع وبدأت تحفر خندقاً في التراب. ولم يمضِ وقتٌ طويل حتى ظهرت تحت السطح، على عمق بضعة سنتيمترات، قطعٌ بيضاء صغيرة لامعة.
+
+وراقب العلماء الصور بترقّب. وبعد أربعة أيام عادوا فنظروا إلى الموضع نفسه، فإذا القطع قد تبخّرت واختفت! وهذا هو السلوك الذي يُفترض أن يفعله الجليد حين يتعرض لجوٍّ المريخ الرقيق. وهكذا أُعلن النبأ في يونيو 2008: ماءٌ متجمد حقيقي على المريخ، تحت أقدام المركبة مباشرةً. وقد كتب فريق المهمة على حسابها في موقع تويتر، وكانت المركبة نفسها «تتكلم» عبر الحساب، أن لديهم جليداً.
+
+ولم تتوقف المفاجآت. فقد أدخلت فينيكس عيّناتٍ من التراب إلى مختبرٍ كيميائي صغير على متنها، وأضافت إليها الماء لتحلّل تركيبها. فوجدت أن التربة قلوية قليلاً، تشبه تربة حدائقنا، ومناسبةً من هذه الناحية لنمو النباتات. لكنها اكتشفت أيضاً مادةً غريبة تُسمّى البيركلورات، وهي ملحٌ كيميائي يمكن أن يتفاعل ويتحلل، وهو ما يفسّر النتائج الغامضة التي أحدثتها تجارب فايكينغ قبل ثلاثين عاماً، حين ظنّ بعض العلماء أنهم عثروا على حياة. وهكذا حُلّ لغزٌ بقي معلّقاً منذ السبعينيات.
+
+وفي سبتمبر 2008 رصد جهازٌ ليزري على المركبة شيئاً جميلاً: ثلجاً يتساقط من سحبٍ عالية في سماء المريخ، لكنه يتبخر قبل أن يبلغ الأرض.
+
+ثم اقترب الشتاء. وكانت فينيكس تعمل بالطاقة الشمسية، وهي في أقصى الشمال، فصارت الشمس تهبط يوماً بعد يوم وتضعف حتى شحّت الطاقة. وحاول المهندسون إطالة عمر المهمة بإيقاف بعض الأجهزة، لكن الضوء كان يخبو. وكان مقدّراً أن تعمل المركبة تسعين يوماً فقط، لكنها عاشت نحو خمسة أشهر.
+
+وفي 2 نوفمبر 2008 وصلت آخر إشارةٍ منها. وأعلنت ناسا انتهاء المهمة بعد ثمانية أيام. وفي عام 2010 صوّرها المدار مغطّاةً بالجليد، وقد انثنت إحدى ألواحها الشمسية تحت وطأته، فاعتُبر ذلك دليلاً جديداً على قسوة شتاء المريخ.
+
+وهذا هو سرّ الحكاية: العنقاء التي نهضت من رماد الفشل لم تعش طويلاً، لكنها أثبتت أن المريخ فيه ماء متجمد قريبٌ من السطح، وفسّرت لغز الحياة التي ظنّها العلماء قبل ثلاثة عقود. وعلّمتنا أن الفشل لا يعني النهاية، بل قد يكون بدايةً أقوى.`, en: ``}
+            },
+            {
+                kind: "lander", lat: -39, lon: 105,
+                ar: "إنسايت", en: "InSight Lander",
+                image: "https://static1.srcdn.com/wordpress/wp-content/uploads/2021/07/nasa-insight-mars-image.jpg",
+                info: {
+                    ar: "أنصتت لزلازل المريخ لتكشف باطن الكوكب، ثم نفدت طاقتها في النهاية.",
+                    en: "InSight listened for marsquakes. It eventually lost power."
+                },
+                story: {title: {ar: "الطبيب الذي أصغى إلى نبض المريخ", en: ""}, ar: `كانت كل المركبات قبلها تدرس سطح المريخ فقط، لكن ناسا أرادت هذه المرة أن تعرف ما في داخله: كم سُمك قشرته؟ وماذا يختبئ في أعماقه؟ وهل لا يزال حياً من الداخل؟ فجاءت إنسايت (InSight)، أي «البصيرة»، وهو اسمٌ مأخوذ من الأحرف الأولى لمهمة استكشاف باطن المريخ بالزلازل.
+
+وفي 5 مايو 2018 انطلقت من كاليفورنيا، وهي أول رحلةٍ بين الكواكب تنطلق من ساحل المحيط الهادئ. وسافر معها رفيقان صغيران بحجم حقيبة السفر، هما قمران اصطناعيان تجريبيان اسمهما «مارکو»، لُقّبا مازحَين بـ«وول-إي» و«إيف» نسبةً إلى فيلم الرسوم المتحركة. وكان دورهما أن يرسلا إلى الأرض أخبار الهبوط لحظةً بلحظة، وقد صارا أول قمرين من هذا الحجم يبلغان الفضاء العميق.
+
+وفي 26 نوفمبر 2018 حان يوم الهبوط، وعاد المهندسون إلى «سبع دقائق الرعب». فتحت المركبة مظلتها، وأشعلت صواريخها، ثم لامست سهلاً مستوياً هادئاً اسمه «إليزيوم بلانيتيا»، اختاره العلماء لأنه يشبه موقف سياراتٍ واسعاً، مناسباً لمركبةٍ ثابتة لا تتحرك. ثم جاءت الإشارة عبر القمرين الصغيرين، وانفجرت القاعة بالتصفيق.
+
+وبعد أسابيع بدأ العمل الحقيقي. مدّت إنسايت ذراعها، وحملت جهازاً حساساً اسمه «سيس»، وهو مقياس زلازل صنعه الفرنسيون، ووضعته برفق على التراب، ثم غطّته بقبةٍ معدنية تحميه من الرياح والبرد. وكان يلتقط اهتزازاتٍ أدق من قطر ذرة الهيدروجين.
+
+وفي أبريل 2019 سُجّل أول زلزالٍ مريخي، وكان ضعيفاً، لكن العلماء احتفلوا به كأنه فتحٌ تاريخي. ثم توالت الهزّات، وفي النهاية رصد الجهاز أكثر من 1300 زلزال، أقواها بلغ نحو 4.7 درجة في مايو 2022. ولم تكن الهزّات ناتجةً عن صفائح متحركة كما في الأرض، بل عن تشققاتٍ في قشرةٍ باردة تتقلص ببطء.
+
+وبفضل تلك الاهتزازات، رسم العلماء صورةً لم يرها أحدٌ من قبل. فقد كانت الموجات تتغير حين تمرّ في طبقات المريخ، فعرفوا سُمك قشرته وطبيعة وشاحه. واكتشفوا أن قلب المريخ سائل، وأن نصف قطره نحو 1830 كيلومتراً، وأنه أقلّ كثافةً مما توقعوا، أي إن فيه عناصر أخف مختلطة بالحديد. وسمعت المركبة أيضاً اصطدام النيازك بالسطح، وفي ديسمبر 2021 رُصد أحدها، وحين صوّر المدارُ موضع الارتطام ظهرت كتلٌ من الجليد تحت التراب.
+
+لكن الرحلة لم تكن مفروشةً بالنجاح. فقد حملت إنسايت جهازاً ثانياً ألمانياً اسمه «الخُلد» (the mole)، وهو مسمارٌ فولاذي ذاتي الحفر، مهمته أن يغوص خمسة أمتارٍ في الأرض ليقيس حرارة المريخ. غير أن التراب في موقع الهبوط تلبّد على غير المتوقع، فلم يجد الخلد ما يتشبث به، فأخذ يقفز في مكانه ويدور دون أن يتقدم. حاول المهندسون لعامين: ضغطوا عليه بالذراع، وقلّبوه، وجرّبوا حيلاً كثيرة، حتى دفنوه بالتراب برفق. لكن الخلد ظلّ عالقاً، فأعلنت ناسا في يناير 2021 التخلي عن المحاولة. وكانت تلك أصعب هزيمةٍ في المهمة.
+
+ثم جاء الخطر الأكبر: الغبار. فقد تراكمت طبقةٌ منه على ألواح المركبة الشمسية، وصارت الطاقة تتناقص عاماً بعد عام. ولم تكن هناك رياحٌ كافية تنفضه كما حدث مع أوبورتيونيتي. فابتكر المهندسون حيلةً غريبة: جعلوا الذراع تغرف التراب وتُسقطه برفقٍ قرب الألواح في أيامٍ ذات رياح، فتحمل ذرّاته الكبيرة بعضَ الغبار العالق معها فتكنسه. ونجحت الحيلة جزئياً، ومنحت المركبة شهوراً إضافية.
+
+وكان العمر المقدّر لها سنةً مريخية واحدة، أي نحو عامين على الأرض. لكنها عاشت نحو أربع سنوات. وفي أبريل 2022 التقطت صورةً لنفسها بعد أن غطّاها الغبار، ثم بدأت قوتها تخبو.
+
+وفي ديسمبر 2022 أخفقت المركبة مرتين في الردّ على الأرض، فأعلنت ناسا انتهاء المهمة في 21 ديسمبر. وقد أرسل فريقها كلمةً تنسب إلى المركبة، مفادها أن طاقتها منخفضة وأنها التقطت صورتها الأخيرة، شبيهةً بما قيل عن أوبورتيونيتي. وهي صياغةٌ شاعرية من الفريق لا رسالةٌ أرسلتها بنفسها، لكنها عبّرت عن حبّ الناس لها.
+
+وهذا هو سرّ الحكاية: لم تكن إنسايت جوّالةً مشهورة ولا بطلةً بصور مذهلة، بل كانت طبيباً صامتاً أصغى إلى قلب المريخ. وبعد وفاتها ما زال العلماء يدرسون بياناتها، وهي التي كشفت أن للمريخ قلباً سائلاً وقشرةً تهتزّ، وعلّمتنا أن بعض الاكتشافات الكبرى تأتي من الإصغاء بصبر، لا من الحفر بقوة.`, en: ``}
+            },
+            {
+                kind: "helicopter", lat: -61, lon: -117,
+                ar: "المروحية إنجينيويتي", en: "Ingenuity Helicopter",
+                image: "https://www.marefa.org/w/images/thumb/5/58/Mars_helicopter_on_sol_46.png/350px-Mars_helicopter_on_sol_46.png",
+                info: {
+                    ar: "أول طائرة تحلّق على كوكب آخر. تضررت ريشاتها وأصبحت قطعة ثابتة على السطح.",
+                    en: "The first aircraft on another planet. Sustained rotor damage and became a stationary artifact."
+                },
+                story: {title: {ar: "المروحية التي تحدّت هواء المريخ", en: ""}, ar: `أرسلت ناسا مع جوّالتها الكبيرة بيرسيفيرانس راكباً صغيراً مخبّأً تحت بطنها: مروحيةً وزنها نحو 1.8 كيلوجرام، بحجم صندوقٍ صغير. واسمها إنجينيويتي (Ingenuity)، أي «البراعة»، اختارته فتاةٌ في السابعة عشرة من ولاية ألاباما اسمها فانيزا روباني، في مسابقةٍ شارك فيها آلاف الطلاب.
+
+وكان سؤال المهمة جريئاً: هل يمكن أن يطير شيءٌ في سماء المريخ؟ فهواء المريخ أرقّ من هواء الأرض بنحو مئة مرة، أي أنه كالهواء على ارتفاع ثلاثين كيلومتراً فوق الأرض، حيث لا تستطيع المراوح عادةً أن تجد ما تتكئ عليه. ولذلك صُنعت شفراتها من ألياف الكربون، وجُعلت تدور بسرعةٍ تقارب 2400 دورة في الدقيقة، أي أسرع بنحو أربعة أضعاف من مروحيةٍ أرضية.
+
+وحملت المروحية معها قطعةً صغيرة من نسيج جناح طائرة الأخوين رايت، أول طائرةٍ حلّقت في التاريخ عام 1903، مثبّتةً تحت ألواحها الشمسية، رمزاً لبدايةٍ جديدة.
+
+وفي 18 فبراير 2021 هبطت بيرسيفيرانس في فوهة جيزيرو، وهي بحيرةٌ قديمة جفّت. وبعد أسابيع أنزلت المروحية على التراب، ثم ابتعدت عنها. وبقيت إنجينيويتي وحدها في ليل المريخ، حيث يهبط البرد إلى نحو تسعين درجةً تحت الصفر، ولا يُبقي أجهزتها حيّةً سوى سخّاناتٍ صغيرة. وحين وصلت أخبار نجاتها من تلك الليلة الأولى، تنفّس الفريق الصعداء.
+
+وجاء 19 أبريل 2021، يوم الاختبار الأول. وقف المهندسون ينتظرون. ارتفعت المروحية نحو ثلاثة أمتارٍ فوق الأرض، وبقيت معلّقةً في الهواء قرابة أربعين ثانية، ثم هبطت برفق. كانت أول طلعةٍ بمحركٍ لمركبةٍ على كوكبٍ آخر. وقالت قائدة المشروع ميمي أونغ إن هذه اللحظة هي «لحظة الأخوين رايت» على المريخ. وسُمّي موقع الإقلاع «ميدان الأخوين رايت».
+
+وكان المقرّر خمس طلعات فقط، لكن إنجينيويتي لم تتوقف. ففي الطلعة الثالثة طارت أكثر من خمسين متراً، وفي الطلعات التالية ارتفعت وابتعدت وجازفت. صارت تصوّر الأرض من الأعلى بكاميرتها، وتبحث عن طريقٍ آمن لبيرسيفيرانس تتجنب فيه الصخور والكثبان. وصارت الجوّالة تتبع صور المروحية كما يتبع المسافر خريطةً أرسلها له دليلٌ مبكّر.
+
+ولم تخلُ الرحلة من الأزمات. ففي الطلعة السادسة، فقدت المروحية توازنها فجأةً بسبب خللٍ في توقيت الصور التي تستخدمها للملاحة، فأخذت تتأرجح في الهواء كأنها ترقص. لكنها استقرّت وهبطت سالمة. وفي شتاء 2022 قلّت الطاقة الشمسية حتى انقطع الاتصال بها أياماً، وظنّ بعضهم أنها انتهت. ثم عادت وأرسلت إشارتها.
+
+ومرّت الشهور والسنوات. وصارت المروحية التي صُمّمت لتجربةٍ قصيرة أشبه بكشّافٍ يسبق الجوّالة، ثم وقعت في بيئةٍ قاسية: أرضٌ مسطّحةٌ خالية من المعالم، فلا تجد كاميرتها ما تتعرّف عليه لتعرف موقعها.
+
+وفي 18 يناير 2024 نفّذت طلعتها الثانية والسبعين. وفي أثناء الهبوط وقع ما لم يكن في الحسبان: اصطدمت إحدى شفراتها بالأرض فتحطّمت، وأرسلت المروحية إلى الأرض صورةً أخيرة بدا فيها ظلّها وعليه شفرةٌ مكسورة. فأعلنت ناسا في 25 يناير 2024 انتهاء المهمة.
+
+وكان مجموع ما حققته أكثر من 128 دقيقة في الجو، أي ما يزيد على ساعتين، وقطعت نحو 17 كيلومتراً، وبلغت أعلى ارتفاعٍ لها نحو 24 متراً. وهي ما زالت هناك، واقفةً على ثلاث قوائم في فوهة جيزيرو.
+
+وهذا هو سرّ الحكاية: لم تكن إنجينيويتي مروحيةً فحسب، بل كانت دليلاً على أن الطيران ممكنٌ في عالمٍ آخر. ومنها سيولد جيلٌ من الطائرات التي ستحلّق فوق المريخ والأقمار البعيدة، لتستكشف ما لا تصل إليه العجلات.`, en: ``}
+            }
+        ]
+    },
+    ceres: {
+        mesh: ceresPlanet, radius: 0.3, modelScale: 0.07,
+        items: [
+            {
+                kind: "spacecraft", lat: 20, lon: 40, altitude: 0.9,
+                ar: "المركبة داون", en: "Dawn Spacecraft",
+                image: "https://upload.wikimedia.org/wikipedia/commons/2/25/PIA21906-Ceres-DwarfPlanet-HighResolution-Dawn-20170920.jpg",
+                info: {
+                    ar: "رسمت خرائط لفيستا وسيريس. نفد وقودها وبقيت في مدار دائم بلا طاقة حول سيريس.",
+                    en: "Mapped Vesta and Ceres. Ran out of fuel and remains in a perpetual, unpowered orbit around Ceres."
+                },
+                story: {title: {ar: "رحله الي النظام الشمسي", en: ""}, ar: `تخيل إنك تقدر تسافر مليارات السنين عبر الزمن، وتكتشف أسرار تكوين نظامنا الشمسي! 🌌 دي مش مجرد قصة خيال علمي، دي كانت المهمة الحقيقية لمركبة فضائية اسمها Dawn أو الفجر.
+
+بدأت الحكاية يوم 27 سبتمبر 2007، لما انطلقت Dawn من الأرض في رحلة استكشافية إلى حزام الكويكبات بين المريخ والمشتري، وكان هدفها استكشاف عالمين غامضين: كويكب فيستا والكوكب القزم سيريس.
+
+استخدمت المركبة تقنية الدفع الأيوني، اللي ساعدتها تسافر لمسافات هائلة بكفاءة عالية. وفي سنة 2011 وصلت إلى محطتها الأولى، كويكب فيستا، وهناك بدأت تكتشف عالمًا مليئًا بالجبال الضخمة والفوهات العميقة والتضاريس الغريبة، وقدمت للعلماء معلومات مهمة عن المراحل الأولى لتكوين الكواكب.
+
+لكن المغامرة لم تنتهِ! غادرت Dawn فيستا واتجهت إلى وجهتها الثانية، سيريس، ووصلت إليه في مارس 2015. وهناك كانت المفاجأة! رصدت بقعًا بيضاء لامعة داخل فوهة Occator، وبعد الدراسات اكتشف العلماء إنها رواسب ملحية مرتبطة بمياه مالحة وصلت إلى سطح الكوكب القزم.
+
+كل صورة التقطتها Dawn كانت بتكشف سر جديد عن تاريخ نظامنا الشمسي، وبتساعد العلماء يفهموا إزاي بدأت قصة تكوين الكواكب.
+
+وبعد أكثر من 11 سنة من الاستكشاف، انتهت مهمة Dawn في نوفمبر 2018 بعد نفاد الوقود اللازم للتحكم في اتجاهها، لكنها تركت وراءها آلاف الصور والاكتشافات العلمية المهمة.
+
+وهنا نتعلم إن استكشاف الفضاء مش مجرد رحلة للوصول إلى أماكن بعيدة، لكنه رحلة للبحث عن إجابات لأسئلة عمرها مليارات السنين.
+
+Dawn لم تكن مجرد مركبة فضائية… بل كانت نافذتنا إلى الماضي، ورحلة كشفت لنا أسرارًا جديدة عن بداية حكاية الكون! 🚀🌌`, en: ``}
+            }
+        ]
+    },
+    eros: {
+        mesh: erosPlanet, radius: 0.15, modelScale: 0.05,
+        items: [
+            {
+                kind: "spacecraft", lat: 0, lon: 0,
+                ar: "نير شوميكر", en: "NEAR Shoemaker",
+                image: "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/07/nearspacecraft.jpg",
+                info: {
+                    ar: "أول مركبة تدور حول كويكب وتهبط عليه. بقيت ساكنة على سطح الكويكب 433 إيروس.",
+                    en: "First spacecraft to orbit and land on an asteroid. Left resting on the surface of 433 Eros."
+                },
+                story: {title: {ar: "الرحلة التي وصلت إلى قلب الكويكب", en: ""}, ar: `
+تخيل إنك بتسافر في الفضاء لمكان بعيد جدًا، علشان تستكشف عالم صغير عمره مليارات السنين، ومحدش من البشر قدر يوصل لسطحه قبل كده! دي مش قصة خيال علمي، دي كانت مهمة حقيقية لمركبة فضائية اسمها NEAR Shoemaker، واحدة من أهم المركبات في تاريخ استكشاف الفضاء.
+
+بدأت الحكاية يوم 17 فبراير سنة 1996، لما انطلقت المركبة من الأرض في رحلة علمية هدفها استكشاف كويكب اسمه إيروس (Eros)، وهو واحد من الكويكبات القريبة من الأرض. وكان العلماء مهتمين بدراسته لأنه ممكن يساعدهم يفهموا طبيعة الكويكبات وتاريخ تكوين النظام الشمسي.
+
+وبعد انطلاقها، بدأت المركبة رحلتها الطويلة في الفضاء، واستخدمت أدوات علمية متطورة لدراسة الأجسام الفضائية والتقاط الصور وجمع المعلومات. وفي طريقها، مرت بالقرب من كويكب ماتيلد سنة 1997، وقدمت صورًا ومعلومات مهمة عن سطحه وتركيبه.
+
+لكن الهدف الأساسي كان لسه مستنيها… كويكب إيروس!
+
+وفي فبراير سنة 2000، وصلت NEAR Shoemaker إلى إيروس، وبدأت تدور حوله، لتصبح أول مركبة فضائية تدخل مدارًا حول كويكب. ومن هنا بدأت المغامرة الحقيقية! التقطت المركبة آلاف الصور لسطح الكويكب، وكشفت عن فوهات ضخمة وصخور منتشرة وتضاريس غريبة، كما ساعدت العلماء في دراسة تركيب الكويكب وكتلته وكثافته.
+
+لكن المفاجأة الأكبر كانت لسه جاية!
+
+في البداية، كانت المهمة الأساسية هي الدوران حول الكويكب ودراسته من بعيد، لكن العلماء قرروا في نهاية المهمة تجربة خطوة استثنائية: الهبوط على سطح إيروس! وفي 12 فبراير سنة 2001، بدأت المركبة تقترب تدريجيًا من السطح، حتى نجحت في الهبوط عليه، وحققت إنجازًا تاريخيًا باعتبارها أول مركبة فضائية تهبط على سطح كويكب.
+
+والأجمل إنها استمرت في إرسال البيانات العلمية بعد الهبوط، وقدمت معلومات إضافية ساعدت العلماء على فهم طبيعة سطح إيروس بشكل أفضل.
+
+وبعد انتهاء مهمتها، توقفت الاتصالات مع المركبة في فبراير 2001، لكنها تركت وراءها كمًا هائلًا من المعلومات والصور العلمية التي ساعدت في تطوير فهمنا للكويكبات وتاريخ النظام الشمسي.
+
+وهنا نتعلم إن الاستكشاف الحقيقي مش بس إننا نوصل لمكان جديد، لكن إننا نمتلك الشجاعة والفضول علشان نكتشف المجهول ونبحث عن إجابات لأسئلة لسه ملهاش نهاية.
+
+NEAR Shoemaker لم تكن مجرد مركبة فضائية، بل كانت أول خطوة للبشرية نحو لمس عالم من عوالم الكويكبات، وأثبتت إن المستحيل ممكن يتحول إلى إنجاز بالعلم والإصرار! 🌌🚀`, en: ``}
+            }
+        ]
+    },
+    pioneer: {
+        mesh: pioneerHub, radius: 0.8, modelScale: 0.14, alwaysVisible: true,
+        items: [
+            {
+                kind: "probe", lat: 0, lon: 90,
+                ar: "بايونير 10", en: "Pioneer 10",
+                image: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Pioneer_10_%2818427352949%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+                info: {
+                    ar: "مسبار فضاء عميق مبكر استكشف الكواكب الخارجية، وهو الآن يبتعد بصمت خارج المجموعة الشمسية.",
+                    en: "Early deep-space probe that explored the outer planets. Now drifting silently out of the solar system."
+                },
+                story: {title: {ar: "اول سفير للبشريه في اعماق الفضاء", en: ""}, ar: `بدأت الحكاية يوم 2 مارس سنة 1972، لما انطلقت Pioneer 10 من الأرض في مهمة تاريخية تابعة لوكالة ناسا، وكان هدفها استكشاف كوكب المشتري، أكبر كواكب المجموعة الشمسية، ودراسة أسراره اللي العلماء وقتها ماكانوش يعرفوا عنها معلومات كافية.
+
+كانت الرحلة مليانة تحديات، لأن المركبة كان لازم تعبر حزام الكويكبات، وهي منطقة مليانة أجسام صخرية بتدور حول الشمس بين المريخ والمشتري. ونجحت بالفعل في عبور الحزام، وده كان إنجاز مهم أثبت إمكانية إرسال مركبات فضائية إلى الكواكب الخارجية بأمان.
+
+وبعد رحلة طويلة، وصلت Pioneer 10 إلى المشتري في ديسمبر سنة 1973، وبدأت واحدة من أهم مراحل مهمتها. اقتربت من الكوكب العملاق والتقطت صورًا مذهلة، وقدمت معلومات علمية عن غلافه الجوي ومجاله المغناطيسي وأحزمة الإشعاع المحيطة به، كما ساعدت العلماء على دراسة أقماره. وكانت أول مركبة فضائية تنجح في استكشاف المشتري عن قرب!
+
+لكن المميز في Pioneer 10 إن رحلتها ماكانتش مجرد مهمة علمية؛ لأنها كانت بتحمل معاها حاجة استثنائية اسمها اللوحة الذهبية (Pioneer Plaque). وهي لوحة معدنية عليها رسومات لرجل وامرأة، ورسم للمجموعة الشمسية، ومعلومات علمية عن مكان الأرض، علشان لو أي حضارة ذكية اكتشفت المركبة في المستقبل تقدر تعرف إن فيه كائنات ذكية عاشت على كوكب اسمه الأرض.
+
+وبعد نجاح مهمتها عند المشتري، واصلت Pioneer 10 رحلتها بعيدًا عن الكواكب، متجهة إلى أعماق الفضاء. وفي يونيو سنة 1983 تجاوزت مدار نبتون، لتصبح أول جسم صنعه الإنسان يعبر مدار أبعد كواكب المجموعة الشمسية وقتها.
+
+واستمرت المركبة في إرسال إشاراتها إلى الأرض لسنوات طويلة، رغم المسافات الهائلة اللي كانت بتفصلها عن كوكبنا، حتى وصل آخر اتصال منها يوم 23 يناير سنة 2003، بعد رحلة استمرت لأكثر من 30 سنة!
+
+ورغم انتهاء الاتصال، فضلت Pioneer 10 تواصل رحلتها في الفضاء، حاملة معاها رسالة بشرية صغيرة من عالمنا إلى المجهول.
+
+وهنا بنكتشف إن الإنجاز الحقيقي مش بس إن الإنسان قدر يوصل إلى المشتري أو يستكشف الكواكب البعيدة، لكن إنه قدر يرسل جزءًا من حكايته إلى أعماق الكون.
+
+Pioneer 10 لم تكن مجرد مركبة فضائية، بل كانت سفيرة لكوكب الأرض، حملت رسالة البشرية إلى المجهول، وأثبتت أن حدود الاكتشاف لا تتوقف عند حدود عالمنا! 🌌🚀`, en: ``}
+            },
+            {
+                kind: "probe", lat: 0, lon: -90,
+                ar: "بايونير 11", en: "Pioneer 11",
+                image: "https://upload.wikimedia.org/wikipedia/commons/f/f0/An_artist%27s_impression_of_a_Pioneer_spacecraft_on_its_way_to_interstellar_space.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+                info: {
+                    ar: "مسبار فضاء عميق مبكر استكشف الكواكب الخارجية، وهو الآن يبتعد بصمت خارج المجموعة الشمسية.",
+                    en: "Early deep-space probe that explored the outer planets. Now drifting silently out of the solar system."
+                },
+                story: {title: {ar: "الرحله التي فتحت ابواب مشتري وزحل", en: ""}, ar: `بدأت الحكاية يوم 6 أبريل سنة 1973، لما انطلقت المركبة من الأرض في رحلة علمية هدفها استكشاف الكواكب العملاقة في نظامنا الشمسي، وخاصة المشتري وزحل. وكانت المركبة مزودة بأجهزة علمية متطورة علشان تدرس الكواكب ومجالاتها المغناطيسية وأقمارها وحلقاتها.
+
+بعد رحلة طويلة، وصلت Pioneer 11 إلى المشتري في ديسمبر 1974، واقتربت منه لمسافة أكبر من المركبة Pioneer 10، والتقطت صورًا مميزة للبقعة الحمراء العظيمة، وقدمت أول صور لمناطق القطبين في الكوكب، وساعدت العلماء على فهم طبيعة غلافه الجوي ومجاله المغناطيسي.
+
+لكن المفاجأة إن المشتري نفسه ساعد المركبة في الوصول إلى هدفها التالي! استخدمت Pioneer 11 جاذبية المشتري لتغيير مسارها وزيادة سرعتها، وكأن الكوكب العملاق عمل زي مقلاع فضائي دفعها في اتجاه زحل!
+
+وفي الأول من سبتمبر سنة 1979، وصلت المركبة إلى زحل، وحققت إنجازًا تاريخيًا باعتبارها أول مركبة فضائية تمر بالقرب منه وتستكشفه عن قرب. اقتربت من الكوكب وحلقت بالقرب من حلقاته، والتقطت مئات الصور، وكشفت عن تفاصيل جديدة في نظام الحلقات، وساعدت العلماء على اكتشاف الحلقة F وقمر جديد لزحل، كما قدمت معلومات مهمة عن مجاله المغناطيسي وأقماره.
+
+وبعد انتهاء مهمتها بالقرب من زحل، واصلت Pioneer 11 رحلتها إلى أعماق الفضاء، وفي 23 فبراير سنة 1990 تجاوزت مدار نبتون، لتبدأ مرحلة جديدة من رحلتها بعيدًا عن الكواكب.
+
+وكانت المركبة تحمل معها لوحة معدنية ذهبية، زي أختها Pioneer 10، عليها رسومات ومعلومات عن البشر والأرض، وكأنها رسالة من الإنسانية لأي حضارة ذكية ممكن تكتشفها في المستقبل.
+
+واستمرت المركبة في العمل لأكثر من 22 سنة، حتى وصل آخر اتصال منها إلى الأرض في 24 نوفمبر 1995، لتنتهي واحدة من أعظم مغامرات الاستكشاف الفضائي.
+
+Pioneer 11 لم تكن مجرد مركبة فضائية، بل كانت مستكشفة فتحت أبوابًا جديدة لفهم الكواكب العملاقة، وأثبتت أن رحلة واحدة ممكن تغير نظرتنا بالكامل إلى الكون! 🌌🚀`, en: ``}
+            }
+        ]
+    },
+    kepler: {
+        mesh: keplerHub, radius: 0.01, modelScale: 0.16, alwaysVisible: true,
+        items: [
+            {
+                kind: "telescope", lat: 0, lon: 0,
+                ar: "تلسكوب كبلر الفضائي", en: "Kepler Space Telescope",
+                image: "https://i.dailymail.co.uk/1s/2023/06/02/14/56096191-12152459-This_is_an_artist_impression_of_the_Kepler_Space_Telescope_that_-m-11_1685712187528.jpg",
+                info: {
+                    ar: "تلسكوب ثوري لاصطياد الكواكب خارج المجموعة الشمسية، نفد وقوده ويطفو الآن في مدار يتبع الأرض حول الشمس.",
+                    en: "Revolutionary exoplanet-hunting telescope that ran out of fuel and is drifting in an Earth-trailing orbit."
+                },
+                story: {title: {ar: "العين التي اكتشفت الاف عوالم خارج حدود المجموعه شمسيه", en: ""}, ar: `تخيل إنك واقف على كوكب الأرض، وبصيت للسماء وسألت نفسك: هل إحنا لوحدنا في الكون؟ وهل ممكن يكون فيه كواكب تانية شبه كوكبنا، عليها مياه، أو حتى ظروف تسمح بوجود حياة؟ الأسئلة دي كانت من أهم الأسباب اللي خلت العلماء يطلقوا مهمة فضائية مميزة اسمها تلسكوب كيبلر (Kepler Space Telescope).
+
+بدأت الحكاية يوم 7 مارس سنة 2009، لما أطلقت وكالة ناسا التلسكوب كيبلر في الفضاء، وكان هدفه الأساسي البحث عن كواكب خارج مجموعتنا الشمسية، وخصوصًا الكواكب اللي ممكن تكون قريبة في حجمها من الأرض وتدور حول نجوم بعيدة.
+
+لكن إزاي كان كيبلر بيكتشف الكواكب دي وهي بعيدة جدًا عننا؟ هنا كانت عبقرية المهمة! كان التلسكوب بيراقب ضوء آلاف النجوم باستمرار، ولما كوكب يمر أمام نجمه، بيحجب جزءًا صغيرًا جدًا من ضوء النجم، فيلاحظ كيبلر انخفاضًا بسيطًا في سطوعه. ومن خلال تكرار الانخفاض ده، قدر العلماء يستدلوا على وجود كواكب بتدور حول النجوم البعيدة.
+
+ومع مرور الوقت، بدأت الاكتشافات المذهلة تظهر! اكتشف كيبلر آلاف الكواكب خارج المجموعة الشمسية، ومن بينها كواكب صخرية قريبة في حجمها من الأرض، وكواكب بتدور حول نجمين، وأنظمة كوكبية مختلفة تمامًا عن نظامنا الشمسي.
+
+ومن أهم اكتشافاته كوكب Kepler-22b، اللي تم الإعلان عنه سنة 2011، وكان من أوائل الكواكب المكتشفة داخل المنطقة الصالحة لوجود مياه سائلة حول نجمها.
+
+لكن الرحلة واجهت تحديًا كبيرًا سنة 2013، لما تعطلت أجزاء مهمة من نظام توجيه التلسكوب، واعتقد العلماء إن مهمته انتهت. لكنهم لم يستسلموا، وابتكروا طريقة جديدة لتشغيله باستخدام ضغط ضوء الشمس، وبدأ مهمة جديدة عُرفت باسم K2، واستمر في اكتشاف كواكب وأجرام فضائية جديدة.
+
+وفي 30 أكتوبر سنة 2018، أعلنت ناسا انتهاء مهمة كيبلر بعد نفاد الوقود، لكنه ترك وراءه كنزًا علميًا ضخمًا، وساهم في اكتشاف أكثر من 2600 كوكب خارج مجموعتنا الشمسية.
+
+وهنا نتعلم إننا مش لازم نسافر لمكان بعيد علشان نكتشفه، أحيانًا مجرد النظر إليه بعين العلم ممكن يكشف لنا عوالم كاملة!
+
+Kepler لم يكن مجرد تلسكوب فضائي، بل كان عين البشرية التي فتحت لنا نافذة على عوالم لم نكن نعرف بوجودها، وأثبت أن الكون مليء بالكواكب، وأن رحلة البحث عن حياة خارج الأرض ما زالت مستمرة! 🌌`, en: ``}
+            }
+        ]
+    }
+};
+
+const labelsRoot = document.getElementById("labels");
+const landmarks = [];
+const upAxis = new THREE.Vector3(0, 1, 0);
+const spinQ = new THREE.Quaternion();
+let itemIndex = 0;
+
+const equipList = document.getElementById("equipList");
+const equipTitle = document.getElementById("equipTitle");
+const panelTitles = {
+    moon: {ar: "🌙 معدات القمر", en: "🌙 Moon Equipment"},
+    mars: {ar: "🔴 معدات المريخ", en: "🔴 Mars Equipment"},
+    ceres: {ar: "☄️ مركبات سيريس", en: "☄️ Ceres Spacecraft"},
+    eros: {ar: "🪨 مركبات إيروس", en: "🪨 Eros Spacecraft"},
+    pioneer: {ar: "🚀 مسبارا بايونير", en: "🚀 Pioneer Probes"},
+    kepler: {ar: "🔭 تلسكوب كبلر", en: "🔭 Kepler Telescope"}
+};
+let flyTo = null;
+let selectedObject = null;
+let activeEntry = null;
+
+Object.values(landmarkData).forEach((group) => {
+    group.items.forEach((item) => {
+        const lat = THREE.MathUtils.degToRad(item.lat);
+        const lon = THREE.MathUtils.degToRad(item.lon);
+        const normal = new THREE.Vector3(Math.cos(lat) * Math.sin(lon), Math.sin(lat), Math.cos(lat) * Math.cos(lon));
+
+        const model = (kindModels[item.kind] || makeLander)();
+        model.scale.setScalar(group.modelScale);
+        model.position.copy(normal).multiplyScalar(group.radius * (1 + (item.altitude || 0)));
+        model.quaternion.setFromUnitVectors(upAxis, normal);
+        spinQ.setFromAxisAngle(normal, itemIndex * 1.7);
+        model.quaternion.premultiply(spinQ);
+        group.mesh.add(model);
+        itemIndex++;
+
+        const anchor = new THREE.Object3D();
+        anchor.position.set(0, 2.8, 0);
+        model.add(anchor);
+
+        const el = document.createElement("div");
+        el.className = "poi-label";
+        el.innerHTML = '<span class="poi-dot"></span><span class="poi-text"></span>';
+        labelsRoot.appendChild(el);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "equip-item";
+        btn.style.display = "none";
+        equipList.appendChild(btn);
+
+        const entry = {
+            mesh: group.mesh, anchor, normal, el, btn, model,
+            alwaysVisible: !!group.alwaysVisible,
+            text: el.querySelector(".poi-text"),
+            item, icon: kindIcons[item.kind] || "🛰️", lang: ""
+        };
+
+        btn.addEventListener("click", () => selectEquipment(entry, true));
+        btn.addEventListener("dblclick", () => openInfo(entry));
+        landmarks.push(entry);
+    });
+});
+
+const poiPos = new THREE.Vector3();
+const poiNormal = new THREE.Vector3();
+const poiView = new THREE.Vector3();
+const modelPos = new THREE.Vector3();
+
+let panelLang = "";
+let panelObject = null;
+
+function refreshPanel(lang) {
+    panelLang = lang;
+    panelObject = selectedObject;
+
+    if (selectedObject) {
+        equipTitle.textContent = panelTitles[bodyKeyOf(selectedObject)][lang];
+    }
+    landmarks.forEach((l) => {
+        l.btn.style.display = l.mesh === selectedObject ? "block" : "none";
+        if (l.mesh !== selectedObject) l.btn.classList.remove("active");
+    });
+    if (infoEl.classList.contains("open")) renderInfo();
+    if (storyEl.classList.contains("open")) renderStory();
+}
+
+function updateLandmarks() {
+    const lang = document.documentElement.lang === "en" ? "en" : "ar";
+    camera.updateMatrixWorld();
+    if (panelLang !== lang || panelObject !== selectedObject) refreshPanel(lang);
+
+    landmarks.forEach((l) => {
+        if (l.lang !== lang) {
+            l.text.textContent = l.icon + " " + l.item[lang];
+            l.btn.textContent = l.icon + " " + l.item[lang];
+            l.lang = lang;
+        }
+
+        let visible = false;
+
+        if (selectedObject === l.mesh) {
+            l.anchor.getWorldPosition(poiPos);
+            poiNormal.copy(l.normal).transformDirection(l.mesh.matrixWorld);
+            poiView.copy(camera.position).sub(poiPos);
+            const distance = poiView.length();
+            poiView.normalize();
+
+            if (distance < 14 && (l.alwaysVisible || poiNormal.dot(poiView) > 0.1)) {
+                poiPos.project(camera);
+                if (poiPos.z < 1) {
+                    const x = (poiPos.x * 0.5 + 0.5) * window.innerWidth;
+                    const y = (-poiPos.y * 0.5 + 0.5) * window.innerHeight;
+                    l.el.style.transform = `translate(${x}px, ${y}px)`;
+                    visible = true;
+
+                    l.ax = x;
+                    l.ay = y;
+                    l.model.getWorldPosition(modelPos);
+                    modelPos.project(camera);
+                    l.mx = (modelPos.x * 0.5 + 0.5) * window.innerWidth;
+                    l.my = (-modelPos.y * 0.5 + 0.5) * window.innerHeight;
+                }
+            }
+        }
+        l.vis = visible;
+        l.el.classList.toggle("show", visible);
+    });
+}
+
+/* 7.8 INFO CARD + STORY */
+const ui = {
+    ar: {story: "📖 اقرأ القصة", close: "إغلاق", imgHere: "ضع صورة هنا", noTitle: "✍️ عنوان القصة", empty: "لسه مفيش قصة للمعدة دي. افتح الكود واكتبها في حقل story."},
+    en: {story: "📖 Read the story", close: "Close", imgHere: "Add an image here", noTitle: "✍️ Story title", empty: "No story yet for this item. Open the code and write it in the story field."}
+};
+
+const infoEl = document.getElementById("info");
+const infoMedia = document.getElementById("infoMedia");
+const infoName = document.getElementById("infoName");
+const infoText = document.getElementById("infoText");
+const infoStoryBtn = document.getElementById("infoStoryBtn");
+const infoClose = document.getElementById("infoClose");
+const storyEl = document.getElementById("story");
+const storyMedia = document.getElementById("storyMedia");
+const storyName = document.getElementById("storyName");
+const storyTitle = document.getElementById("storyTitle");
+const storyBody = document.getElementById("storyBody");
+const storyClose = document.getElementById("storyClose");
+
+function curLang() {
+    return document.documentElement.lang === "en" ? "en" : "ar";
+}
+
+function makeMedia(l, lang) {
+    const wrap = document.createElement("div");
+    wrap.className = "media-ph";
+    wrap.innerHTML = "<span>" + l.icon + "</span><small>" + ui[lang].imgHere + "</small>";
+    if (l.item.image) {
+        const img = new Image();
+        img.alt = l.item[lang];
+        img.onload = () => { wrap.className = "media-img"; wrap.replaceChildren(img); };
+        img.src = l.item.image;
+        if (img.complete && img.naturalWidth !== 0) {
+            wrap.className = "media-img";
+            wrap.replaceChildren(img);
+        }
+    }
+    return wrap;
+}
+
+function renderInfo() {
+    if (!activeEntry) return;
+    const lang = curLang();
+    const l = activeEntry;
+    infoMedia.replaceChildren(makeMedia(l, lang));
+    infoName.textContent = l.icon + " " + l.item[lang];
+    infoText.textContent = l.item.info[lang];
+    infoStoryBtn.textContent = ui[lang].story;
+    infoClose.setAttribute("aria-label", ui[lang].close);
+}
+
+function renderStory() {
+    if (!activeEntry) return;
+    const lang = curLang();
+    const l = activeEntry;
+    const text = (l.item.story[lang] || "").trim();
+    storyMedia.replaceChildren(makeMedia(l, lang));
+    storyName.textContent = l.icon + " " + l.item[lang];
+    storyTitle.textContent = (l.item.story.title && l.item.story.title[lang]) || ui[lang].noTitle;
+    storyBody.innerHTML = text || '<p class="story-empty">' + ui[lang].empty + "</p>";
+    storyClose.setAttribute("aria-label", ui[lang].close);
+}
+
+function selectEquipment(l, fly) {
+    activeEntry = l;
+    if (fly) flyTo = l;
+    landmarks.forEach((x) => x.btn.classList.toggle("active", x === l));
+    l.btn.scrollIntoView({block: "nearest"});
+}
+
+function openInfo(l) {
+    selectEquipment(l, false);
+    renderInfo();
+    infoEl.classList.add("open");
+}
+function closeInfo() { infoEl.classList.remove("open"); }
+function openStory(l) {
+    selectEquipment(l, false);
+    closeInfo();
+    renderStory();
+    storyEl.classList.add("open");
+}
+function closeStory() { storyEl.classList.remove("open"); }
+
+function pickEquipment(e) {
+    let best = null;
+    let bestDistance = 34;
+    landmarks.forEach((l) => {
+        if (!l.vis) return;
+        const d = Math.min(Math.hypot(e.clientX - l.ax, e.clientY - l.ay), Math.hypot(e.clientX - l.mx, e.clientY - l.my));
+        if (d < bestDistance) { best = l; bestDistance = d; }
+    });
+    return best;
+}
+
+infoStoryBtn.addEventListener("click", () => { if (activeEntry) openStory(activeEntry); });
+infoClose.addEventListener("click", closeInfo);
+infoEl.addEventListener("click", (e) => { if (e.target === infoEl) closeInfo(); });
+storyClose.addEventListener("click", closeStory);
+storyEl.addEventListener("click", (e) => { if (e.target === storyEl) closeStory(); });
+window.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeStory(); closeInfo(); } });
+
+window.addEventListener("dblclick", (e) => {
+    if (!selectedObject) return;
+    if (e.target.closest(".story, .equip-panel, button")) return;
+    const hit = pickEquipment(e);
+    if (hit) openInfo(hit);
+});
+
+/* 8. ASTEROID BELT */
+const asteroidPositions = [];
+for (let i = 0; i < 700; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 13.3 + Math.random() * 1.3;
+    const y = (Math.random() - 0.5) * 0.5;
+    asteroidPositions.push(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+}
+const asteroidGeometry = new THREE.BufferGeometry();
+asteroidGeometry.setAttribute("position", new THREE.Float32BufferAttribute(asteroidPositions, 3));
+const asteroids = new THREE.Points(asteroidGeometry, new THREE.PointsMaterial({color: 0xb6a58d, size: 0.09, sizeAttenuation: true}));
+scene.add(asteroids);
+
+/* 9. STARS */
+const starPositions = [];
+for (let i = 0; i < 2500; i++) {
+    starPositions.push((Math.random() - 0.5) * 180, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 180);
+}
+const starGeometry = new THREE.BufferGeometry();
+starGeometry.setAttribute("position", new THREE.Float32BufferAttribute(starPositions, 3));
+const starField = new THREE.Points(starGeometry, new THREE.PointsMaterial({color: 0xffffff, size: 0.12, transparent: true, opacity: 0.85}));
+scene.add(starField);
+
+/* 10. CAMERA CONTROL */
+let zoomK = 1;
+const cameraTarget = new THREE.Vector3(0, 0, 0);
+const desiredTarget = new THREE.Vector3(0, 0, 0);
+const desiredCamera = new THREE.Vector3(0, 24, 53);
+const cameraOffset = new THREE.Vector3();
+const worldPosition = new THREE.Vector3();
+const defaultCamera = new THREE.Vector3(0, 24, 53);
+
+const heroContent = document.getElementById("heroContent");
+const aboutSection = document.getElementById("about"); // قسم about متعلّق في الـ HTML، فممكن يكون null
+
+window.focusSpaceObject = function (object) {
+    const clickedObject = bodies[object].mesh;
+    selectedObject = selectedObject === clickedObject ? null : clickedObject;
+
+    const hide = selectedObject !== null;
+    heroContent.classList.toggle("fade-out", hide);
+    if (aboutSection) aboutSection.classList.toggle("fade-out", hide);
+    document.body.classList.toggle("exploring", hide);
+
+    document.querySelectorAll("[data-btn]").forEach((b) => {
+        b.classList.toggle("active", selectedObject !== null && bodies[b.dataset.btn].mesh === selectedObject);
+    });
+
+    if (!hide) {
+        document.body.classList.remove("dragging");
+        drag.active = false;
+        window.scrollTo(0, 0);
+    }
+
+    zoomK = 1;
+    flyTo = null;
+    activeEntry = null;
+    closeInfo();
+    closeStory();
+    landmarks.forEach((l) => l.btn.classList.remove("active"));
+};
+
+/* 10.5 MANUAL ROTATION */
+const drag = {active: false, x: 0, y: 0, sx: 0, sy: 0};
+const ROTATE_SPEED = 0.008;
+
+const camRight = new THREE.Vector3();
+const camUp = new THREE.Vector3();
+const qYaw = new THREE.Quaternion();
+const qPitch = new THREE.Quaternion();
+const qDelta = new THREE.Quaternion();
+const qParent = new THREE.Quaternion();
+const qParentInv = new THREE.Quaternion();
+const qLocal = new THREE.Quaternion();
+
+function rotateSelected(dx, dy) {
+    if (!selectedObject) return;
+    camera.updateMatrixWorld();
+    camRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+    camUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    qYaw.setFromAxisAngle(camUp, dx * ROTATE_SPEED);
+    qPitch.setFromAxisAngle(camRight, dy * ROTATE_SPEED);
+    qDelta.copy(qYaw).multiply(qPitch);
+    applyWorldRotation(qDelta);
+}
+
+function applyWorldRotation(q) {
+    selectedObject.parent.updateWorldMatrix(true, false);
+    selectedObject.parent.getWorldQuaternion(qParent);
+    qParentInv.copy(qParent).invert();
+    qLocal.copy(qParentInv).multiply(q).multiply(qParent);
+    selectedObject.quaternion.premultiply(qLocal);
+}
+
+const qStep = new THREE.Quaternion();
+const qFull = new THREE.Quaternion();
+const qIdentity = new THREE.Quaternion();
+const flyNormal = new THREE.Vector3();
+const flyView = new THREE.Vector3();
+const flyCenter = new THREE.Vector3();
+
+function updateFlyTo() {
+    if (!flyTo || flyTo.mesh !== selectedObject) { flyTo = null; return; }
+    selectedObject.updateWorldMatrix(true, false);
+    selectedObject.getWorldPosition(flyCenter);
+    flyNormal.copy(flyTo.normal).transformDirection(selectedObject.matrixWorld);
+    flyView.copy(camera.position).sub(flyCenter).normalize();
+    if (flyNormal.angleTo(flyView) < 0.003) { flyTo = null; return; }
+    qFull.setFromUnitVectors(flyNormal, flyView);
+    qStep.copy(qIdentity).slerp(qFull, 0.1);
+    applyWorldRotation(qStep);
+}
+
+window.addEventListener("pointerdown", (e) => {
+    if (!selectedObject) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    if (e.target.closest("button, .equip-panel, .story, .space-controls")) return;
+    flyTo = null;
+    drag.active = true;
+    drag.x = e.clientX; drag.y = e.clientY;
+    drag.sx = e.clientX; drag.sy = e.clientY;
+    document.body.classList.add("dragging");
+});
+
+window.addEventListener("pointermove", (e) => {
+    if (!drag.active || !selectedObject) return;
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    drag.x = e.clientX; drag.y = e.clientY;
+    rotateSelected(dx, dy);
+});
+
+function endDrag() {
+    drag.active = false;
+    document.body.classList.remove("dragging");
+}
+
+window.addEventListener("pointerup", (e) => {
+    if (drag.active && selectedObject && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) {
+        const hit = pickEquipment(e);
+        if (hit) selectEquipment(hit, false);
+    }
+    endDrag();
+});
+window.addEventListener("pointercancel", endDrag);
+window.addEventListener("blur", endDrag);
+
+window.addEventListener("wheel", (e) => {
+    if (!selectedObject) return;
+    if (e.target.closest(".story, .equip-panel")) return;
+    e.preventDefault();
+    zoomK = THREE.MathUtils.clamp(zoomK * (1 + e.deltaY * 0.001), 0.35, 1.8);
+}, {passive: false});
+
+/* 11. ANIMATION */
+const clock = new THREE.Clock();
+let hold = 0;
+
+function animate() {
+    requestAnimationFrame(animate);
+    const delta = Math.min(clock.getDelta(), 0.05);
+
+    sun.rotation.y += delta * 0.12;
+
+    hold += ((selectedObject ? 1 : 0) - hold) * 0.12;
+    if (selectedObject && hold > 0.999) hold = 1;
+    const calm = 1 - hold;
+
+    movingPlanets.forEach((item) => {
+        const frozen = selectedObject === item.planet || (selectedObject === moon && item.name === "Earth");
+        const k = frozen ? calm : 1;
+        item.pivot.rotation.y += delta * item.speed * k;
+        item.planet.rotation.y += delta * (item.spin ?? 0.7) * k;
+    });
+
+    const moonK = selectedObject === moon ? calm : 1;
+    moonPivot.rotation.y += delta * 0.5 * moonK;
+    moon.rotation.y += delta * 0.3 * moonK;
+
+    asteroids.rotation.y += delta * 0.025;
+    starField.rotation.y += delta * 0.002;
+
+    if (selectedObject) {
+        selectedObject.getWorldPosition(worldPosition);
+        desiredTarget.copy(worldPosition);
+        cameraOffset.set(0, 2.2, 5.5).multiplyScalar(zoomK);
+        desiredCamera.copy(desiredTarget).add(cameraOffset);
+    } else {
+        desiredTarget.set(0, 0, 0);
+        desiredCamera.copy(defaultCamera);
+    }
+
+    cameraTarget.lerp(desiredTarget, 0.045);
+    camera.position.lerp(desiredCamera, 0.045);
+    camera.lookAt(cameraTarget);
+
+    if (selectedObject) updateFlyTo();
+
+    renderer.render(scene, camera);
+    updateLandmarks();
+}
+animate();
+
+/* 12. RESPONSIVE */
+function resizeScene() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+}
+window.addEventListener("resize", resizeScene);
+resizeScene();
+
+window.__spaceReady = true;
+</script>
+</body>
+</html>
